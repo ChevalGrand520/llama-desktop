@@ -24,6 +24,8 @@ public sealed class IncrementalUtf8LogReader : IDisposable
             {
                 _offset = 0;
                 _decoder.Reset();
+                _stream.Dispose();
+                _stream = new FileStream(_path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             }
             _stream.Seek(_offset, SeekOrigin.Begin);
             var available = (int)Math.Min(65536, _stream.Length - _offset);
