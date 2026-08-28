@@ -6,6 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>12</LangVersion>
     <UseWPF>true</UseWPF>
+    <!-- App.xaml is compiled as a Page, not ApplicationDefinition, so the
+         SDK does not auto-generate a Main() for it; Program.Main (the real
+         entry point) then also finds App.InitializeComponent() generated. -->
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />

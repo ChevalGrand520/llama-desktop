@@ -1,0 +1,49 @@
+<Window x:Class="LlamaDesktop.App.ShellWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Llama Desktop" Width="1180" Height="780" MinWidth="900" MinHeight="600"
+        WindowStartupLocation="CenterScreen" Background="#F5F6F8" FontFamily="Segoe UI">
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    <Grid Grid.Row="0" Margin="0,0,0,12">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <TextBlock Text="Llama Desktop" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+      <TextBlock Grid.Column="1" Text="{Binding StatusText}" VerticalAlignment="Center" Margin="16,0,0,0" Foreground="#374151"/>
+      <StackPanel Grid.Column="2" Orientation="Horizontal">
+        <Button Content="复制 API 地址" Command="{Binding CopyApiCommand}" Margin="0,0,8,0" Padding="12,6"/>
+        <Button Content="打开聊天页" Command="{Binding OpenBrowserCommand}" Padding="12,6"/>
+      </StackPanel>
+    </Grid>
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" MinWidth="280"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <StackPanel Grid.Column="0" Margin="0,0,16,0">
+        <Button Content="启动服务" Command="{Binding StartCommand}" Height="40" Margin="0,0,0,8"/>
+        <Button Content="停止服务" Command="{Binding StopCommand}" Height="40" Margin="0,0,0,8"/>
+        <TextBlock Text="{Binding ApiBaseUrl}" TextWrapping="Wrap" Foreground="#5F6368"/>
+      </StackPanel>
+      <Grid Grid.Column="1">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="*"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Border Grid.Row="0" Background="#FFFFFF" BorderBrush="#E0E0E0" BorderThickness="1">
+          <Grid x:Name="WebHostGrid"/>
+        </Border>
+        <Expander Grid.Row="1" Header="实时日志" IsExpanded="True">
+          <TextBox x:Name="LogText" IsReadOnly="True" AcceptsReturn="True" Height="160"
+                   VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="12"
+                   Background="#111827" Foreground="#E5E7EB" BorderThickness="0" TextWrapping="NoWrap"/>
+        </Expander>
+      </Grid>
+    </Grid>
+  </Grid>
+</Window>
