@@ -1,0 +1,18 @@
+﻿$ErrorActionPreference = 'Stop'
+$root = Split-Path -Parent $PSScriptRoot
+$out = Join-Path $root 'dist\LlamaDesktop'
+if (Test-Path $out) { Remove-Item -LiteralPath $out -Recurse -Force }
+dotnet publish (Join-Path $root 'src\LlamaDesktop.App\LlamaDesktop.App.csproj') `
+  -c Release -r win-x64 --self-contained true `
+  -p:PublishSingleFile=false -p:IncludeNativeLibrariesForSelfExtract=false `
+  -o $out
+if ($LASTEXITCODE -ne 0) { throw 'dotnet publish failed' }
+Copy-Item (Join-Path $root 'llama-server.exe') $out -Force
+Get-ChildItem (Join-Path $root 'ggml-*.dll') -ErrorAction SilentlyContinue | Copy-Item -Destination $out -Force
+Get-ChildItem (Join-Path $root '*.dll') -File -ErrorAction SilentlyContinue |
+  Where-Object { $_.Name -match 'cublas|cudart|vulkan|ggml' } | Copy-Item -Destination $out -Force
+Copy-Item (Join-Path $root '启动Llama.cmd') $out -Force
+Copy-Item (Join-Path $root 'LlamaLauncher.ps1') $out -Force
+Copy-Item (Join-Path $root 'Launcher.Core.psm1') $out -Force
+if (-not (Test-Path (Join-Path $out 'models'))) { Copy-Item (Join-Path $root 'models') $out -Recurse -Force }
+Write-Host "Published to $out"
