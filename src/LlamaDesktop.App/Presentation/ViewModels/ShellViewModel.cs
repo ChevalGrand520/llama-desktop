@@ -60,6 +60,7 @@ public sealed class ShellViewModel : ObservableObject
 
     private async Task StartAsync()
     {
+        _stopRequested = false;
         var issues = SettingsValidator.Validate(_settings);
         if (issues.Count > 0)
         {
