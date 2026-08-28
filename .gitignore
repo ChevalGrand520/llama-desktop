@@ -6,3 +6,6 @@ dist/
 *.log
 launcher-config.json
 launcher-server.log
+llama-server.exe
+*.dll
+models/

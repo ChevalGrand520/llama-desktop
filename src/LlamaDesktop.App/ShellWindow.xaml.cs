@@ -8,12 +8,14 @@ namespace LlamaDesktop.App;
 public partial class ShellWindow : Window
 {
     private readonly WebView2 _webView;
+    private readonly ShellViewModel _viewModel;
 
     public ShellWindow(ShellViewModel viewModel, WebView2 webView)
     {
         InitializeComponent();
         DataContext = viewModel;
         _webView = webView;
+        _viewModel = viewModel;
         WebHostGrid.Children.Add(webView);
         viewModel.Log.Lines.CollectionChanged += OnLogLinesChanged;
     }
@@ -29,8 +31,22 @@ public partial class ShellWindow : Window
                 {
                     LogText.AppendText($"{item}\r\n");
                 }
-                LogText.ScrollToEnd();
             }
+            else if (e.Action is NotifyCollectionChangedAction.Remove or NotifyCollectionChangedAction.Reset)
+            {
+                // The VM caps Lines at 2000; rebuild the pane so the TextBox stays bounded too.
+                RebuildLogText();
+            }
+            LogText.ScrollToEnd();
         }));
+    }
+
+    private void RebuildLogText()
+    {
+        LogText.Clear();
+        foreach (var line in _viewModel.Log.Lines)
+        {
+            LogText.AppendText($"{line}\r\n");
+        }
     }
 }

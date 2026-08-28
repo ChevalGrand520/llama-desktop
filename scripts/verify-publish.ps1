@@ -8,7 +8,7 @@ $ggufCount = @(Get-ChildItem (Join-Path $out 'models') -Recurse -Filter '*.gguf'
 if ($ggufCount -eq 0) { throw '发布目录中没有 GGUF 模型。' }
 # Runtime gate: the published server binary must actually execute (loads its DLL closure).
 # Pin the working directory to the publish output so the binary cannot borrow DLLs from the caller's CWD.
-foreach ($closureDll in @('llama-server-impl.dll','llama-common.dll','llama.dll','mtmd.dll','libomp.dll')) {
+foreach ($closureDll in @('llama-server-impl.dll','llama-common.dll','llama.dll','mtmd.dll','libomp.dll','cublas64_13.dll','cudart64_13.dll','ggml-cuda.dll')) {
     if (-not (Test-Path (Join-Path $out $closureDll))) { throw "缺少运行时依赖：$closureDll" }
 }
 Push-Location $out

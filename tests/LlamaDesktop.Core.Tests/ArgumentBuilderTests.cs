@@ -49,6 +49,7 @@ public class ArgumentBuilderTests
         Assert.False(ExtraArgumentPolicy.Validate(new[] { "--port", "9999" }, out var e1) || e1.Count == 0);
         Assert.False(ExtraArgumentPolicy.Validate(new[] { "--api-key=secret" }, out var e2) || e2.Count == 0);
         Assert.False(ExtraArgumentPolicy.Validate(new[] { "--log-disable" }, out var e3) || e3.Count == 0);
+        Assert.False(ExtraArgumentPolicy.Validate(new[] { "--flash-attn", "on" }, out var e5) || e5.Count == 0);
         Assert.True(ExtraArgumentPolicy.Validate(new[] { "--verbose" }, out var e4) && e4.Count == 0);
     }
 }

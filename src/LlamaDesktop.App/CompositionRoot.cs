@@ -52,6 +52,7 @@ public static class CompositionRoot
         webViewHost.NavigationRequested += uri =>
         {
             serviceBase = uri;
+            if (webView.CoreWebView2 is null) return;
             webView.CoreWebView2.Navigate(uri.ToString());
         };
         webView.NavigationStarting += (_, e) =>
@@ -68,7 +69,25 @@ public static class CompositionRoot
                 catch { }
             }
         };
-        _ = webView.EnsureCoreWebView2Async();
+        _ = InitializeWebViewAsync(webView);
+
+        async Task InitializeWebViewAsync(WebView2 wv)
+        {
+            // CoreWebView2 is only available after initialization; attach the
+            // new-window handler once the runtime exists to avoid an NRE.
+            await wv.EnsureCoreWebView2Async();
+            if (wv.CoreWebView2 is null) return;
+            wv.CoreWebView2.NewWindowRequested += (_, e) =>
+            {
+                e.Handled = true;
+                if (serviceBase is not null
+                    && Uri.TryCreate(e.Uri, UriKind.Absolute, out var u)
+                    && NavigationPolicy.IsAllowed(u, serviceBase))
+                {
+                    wv.CoreWebView2.Navigate(u.ToString());
+                }
+            };
+        }
 
         var window = new ShellWindow(viewModel, webView);
         app.MainWindow = window;

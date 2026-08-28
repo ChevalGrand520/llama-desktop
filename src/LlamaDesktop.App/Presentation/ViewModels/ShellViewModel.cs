@@ -26,6 +26,7 @@ public sealed class ShellViewModel : ObservableObject
     private ServerLifecycleState _state = ServerLifecycleState.Stopped;
     private string _statusText = "未运行";
     private Uri? _serviceUri;
+    private bool _stopRequested;
 
     public ShellViewModel(
         string serverPath,
@@ -66,6 +67,14 @@ public sealed class ShellViewModel : ObservableObject
             return;
         }
 
+        var extra = _settings.ExtraArguments.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        ExtraArgumentPolicy.Validate(extra, out var errors);
+        if (errors.Count > 0)
+        {
+            foreach (var error in errors) Log.Append(error);
+            return;
+        }
+
         var port = _settings.AutoSelectPort
             ? WindowsPortAllocator.PickFreePort(_settings.Port)
             : _settings.Port;
@@ -100,8 +109,15 @@ public sealed class ShellViewModel : ObservableObject
             _controller.ProcessExited += code =>
             {
                 Log.Append($"llama-server 已退出，退出码：{code}");
-                _state = ServerLifecycleState.Failed;
-                StatusText = $"启动失败（退出码 {code}）";
+                if (_stopRequested)
+                {
+                    StatusText = "已停止";
+                }
+                else
+                {
+                    _state = ServerLifecycleState.Failed;
+                    StatusText = $"启动失败（退出码 {code}）";
+                }
             };
             var proc = _controller.Start(_serverPath, WindowsArgumentQuoter.Quote(args));
             Log.Append($"已启动 llama-server，PID：{proc.Id}");
@@ -146,6 +162,7 @@ public sealed class ShellViewModel : ObservableObject
     private async Task StopAsync()
     {
         if (_controller is null) return;
+        _stopRequested = true;
         StatusText = "正在停止";
         var result = await _controller.StopAsync(new Progress<StopPhase>(phase =>
         {

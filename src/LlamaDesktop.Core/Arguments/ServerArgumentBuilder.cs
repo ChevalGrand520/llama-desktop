@@ -22,6 +22,12 @@ public static class ServerArgumentBuilder
         args.Add("--model");
         args.Add(s.ModelPath);
 
+        if (caps.WebUi)
+        {
+            args.Add("--ui");
+            args.Add("on");
+        }
+
         args.Add("--ctx-size");
         args.Add(s.ContextSize.ToString());
         args.Add("--batch-size");
@@ -40,10 +46,10 @@ public static class ServerArgumentBuilder
             args.Add(layers.ToString());
         }
 
-        if (caps.FlashAttnValueSyntax && s.FlashAttention != "off")
+        if (caps.FlashAttnValueSyntax && !s.FlashAttention.Equals("off", StringComparison.OrdinalIgnoreCase))
         {
             args.Add("--flash-attn");
-            args.Add(s.FlashAttention);
+            args.Add(s.FlashAttention.ToLowerInvariant());
         }
 
         if (caps.Fit && s.FitMode == "on")

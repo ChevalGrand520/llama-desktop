@@ -7,7 +7,7 @@ public static class ExtraArgumentPolicy
         "--model", "--models-dir", "--host", "--port", "--log-file", "--gpu-layers", "--fit",
         "--fit-target", "--ctx-size", "-c", "--threads", "-t", "--batch-size", "--parallel",
         "--ui", "--no-ui", "--models-preset", "--models-max", "--cache-type-k", "--cache-type-v",
-        "--reasoning", "--n-predict", "-n",
+        "--reasoning", "--n-predict", "-n", "--flash-attn", "-fa",
     };
 
     private static readonly HashSet<string> SensitiveOrDangerous = new(StringComparer.OrdinalIgnoreCase)
