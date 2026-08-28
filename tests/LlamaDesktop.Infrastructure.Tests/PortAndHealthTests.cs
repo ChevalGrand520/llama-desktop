@@ -36,8 +36,15 @@ public class PortAndHealthTests
         using var http = new HttpListener();
         http.Prefixes.Add("http://127.0.0.1:18099/");
         http.Start();
+        var serve = Task.Run(async () =>
+        {
+            var ctx = await http.GetContextAsync();
+            ctx.Response.StatusCode = 200;
+            ctx.Response.Close();
+        });
         var monitor = new LlamaHealthMonitor();
         Assert.True(await monitor.ProbeAsync("http://127.0.0.1:18099", "health", CancellationToken.None));
+        await serve;
         http.Stop();
     }
 
