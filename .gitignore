@@ -1,0 +1,8 @@
+bin/
+obj/
+dist/
+.analysis/
+.superpowers/
+*.log
+launcher-config.json
+launcher-server.log
