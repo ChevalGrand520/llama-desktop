@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F9912081-8DB2-4810-9949-621759A4A6DE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LlamaDesktop.Core", "src\LlamaDesktop.Core\LlamaDesktop.Core.csproj", "{3BD884CC-F2A2-4028-90E1-1D6B23DBDBD6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LlamaDesktop.Infrastructure", "src\LlamaDesktop.Infrastructure\LlamaDesktop.Infrastructure.csproj", "{28B2C3DD-0A79-4661-A8E8-941B2F241ADA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LlamaDesktop.App", "src\LlamaDesktop.App\LlamaDesktop.App.csproj", "{61D46AE3-71FF-443E-9B1E-4AB0230E7406}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{00D9863A-9C65-41D4-97BB-320DFF56BD72}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LlamaDesktop.Core.Tests", "tests\LlamaDesktop.Core.Tests\LlamaDesktop.Core.Tests.csproj", "{BF9B9BFF-E7BC-4A0D-88D6-85AA7E78C3B4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LlamaDesktop.Infrastructure.Tests", "tests\LlamaDesktop.Infrastructure.Tests\LlamaDesktop.Infrastructure.Tests.csproj", "{3B2462D1-AE05-4EDC-A264-C89A19EE1B45}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LlamaDesktop.App.Tests", "tests\LlamaDesktop.App.Tests\LlamaDesktop.App.Tests.csproj", "{4DA85FBC-F325-43A2-9B4A-6895B3E565E5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3BD884CC-F2A2-4028-90E1-1D6B23DBDBD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BD884CC-F2A2-4028-90E1-1D6B23DBDBD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BD884CC-F2A2-4028-90E1-1D6B23DBDBD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BD884CC-F2A2-4028-90E1-1D6B23DBDBD6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28B2C3DD-0A79-4661-A8E8-941B2F241ADA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28B2C3DD-0A79-4661-A8E8-941B2F241ADA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28B2C3DD-0A79-4661-A8E8-941B2F241ADA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28B2C3DD-0A79-4661-A8E8-941B2F241ADA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61D46AE3-71FF-443E-9B1E-4AB0230E7406}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61D46AE3-71FF-443E-9B1E-4AB0230E7406}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61D46AE3-71FF-443E-9B1E-4AB0230E7406}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61D46AE3-71FF-443E-9B1E-4AB0230E7406}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF9B9BFF-E7BC-4A0D-88D6-85AA7E78C3B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF9B9BFF-E7BC-4A0D-88D6-85AA7E78C3B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF9B9BFF-E7BC-4A0D-88D6-85AA7E78C3B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF9B9BFF-E7BC-4A0D-88D6-85AA7E78C3B4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B2462D1-AE05-4EDC-A264-C89A19EE1B45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B2462D1-AE05-4EDC-A264-C89A19EE1B45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B2462D1-AE05-4EDC-A264-C89A19EE1B45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B2462D1-AE05-4EDC-A264-C89A19EE1B45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DA85FBC-F325-43A2-9B4A-6895B3E565E5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DA85FBC-F325-43A2-9B4A-6895B3E565E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DA85FBC-F325-43A2-9B4A-6895B3E565E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DA85FBC-F325-43A2-9B4A-6895B3E565E5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3BD884CC-F2A2-4028-90E1-1D6B23DBDBD6} = {F9912081-8DB2-4810-9949-621759A4A6DE}
+		{28B2C3DD-0A79-4661-A8E8-941B2F241ADA} = {F9912081-8DB2-4810-9949-621759A4A6DE}
+		{61D46AE3-71FF-443E-9B1E-4AB0230E7406} = {F9912081-8DB2-4810-9949-621759A4A6DE}
+		{BF9B9BFF-E7BC-4A0D-88D6-85AA7E78C3B4} = {00D9863A-9C65-41D4-97BB-320DFF56BD72}
+		{3B2462D1-AE05-4EDC-A264-C89A19EE1B45} = {00D9863A-9C65-41D4-97BB-320DFF56BD72}
+		{4DA85FBC-F325-43A2-9B4A-6895B3E565E5} = {00D9863A-9C65-41D4-97BB-320DFF56BD72}
+	EndGlobalSection
+EndGlobal
