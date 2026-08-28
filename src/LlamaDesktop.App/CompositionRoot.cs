@@ -31,21 +31,23 @@ public static class CompositionRoot
             ?? ServerSettings.WithDefaults(Math.Max(1, Environment.ProcessorCount), "");
 
         var modelsDir = Path.Combine(appRoot, "models");
-        var firstModel = Directory.Exists(modelsDir)
+        var models = Directory.Exists(modelsDir)
             ? Directory.EnumerateFiles(modelsDir, "*.gguf", SearchOption.AllDirectories)
                 .Where(f => !Path.GetFileName(f).StartsWith("Modelfile."))
+                .Where(f => !Path.GetFileName(f).Contains("mmproj", StringComparison.OrdinalIgnoreCase))
                 .OrderBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase)
-                .FirstOrDefault()
-            : null;
+                .ToArray()
+            : Array.Empty<string>();
+        var firstModel = models.FirstOrDefault() ?? "";
         var effective = string.IsNullOrWhiteSpace(saved.ModelPath)
-            ? saved with { ModelPath = firstModel ?? "", ModelsDirectory = "models" }
+            ? saved with { ModelPath = firstModel, ModelsDirectory = "models" }
             : saved;
 
         var webViewHost = new WebViewHost();
         _ = webViewHost.InitializeAsync(webViewData, CancellationToken.None);
 
         var viewModel = new ShellViewModel(
-            serverPath, logPath, configStore, webViewHost, effective);
+            serverPath, logPath, configStore, webViewHost, effective, models);
 
         var webView = new WebView2();
         Uri? serviceBase = null;

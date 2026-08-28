@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Input;
@@ -10,6 +11,7 @@ using LlamaDesktop.Infrastructure.Logging;
 using LlamaDesktop.Infrastructure.Network;
 using LlamaDesktop.Infrastructure.Persistence;
 using LlamaDesktop.Infrastructure.Processes;
+using Microsoft.Win32;
 
 namespace LlamaDesktop.App.Presentation.ViewModels;
 
@@ -25,6 +27,7 @@ public sealed class ShellViewModel : ObservableObject
     private ServerSettings _settings;
     private ServerLifecycleState _state = ServerLifecycleState.Stopped;
     private string _statusText = "未运行";
+    private string _selectedModel = "";
     private Uri? _serviceUri;
     private bool _stopRequested;
 
@@ -33,7 +36,8 @@ public sealed class ShellViewModel : ObservableObject
         string logPath,
         JsonConfigStore configStore,
         WebViewHost webView,
-        ServerSettings initialSettings)
+        ServerSettings initialSettings,
+        IReadOnlyList<string> models)
     {
         _serverPath = serverPath;
         _logPath = logPath;
@@ -41,26 +45,59 @@ public sealed class ShellViewModel : ObservableObject
         _webView = webView;
         _settings = initialSettings;
 
+        Models = new ObservableCollection<string>(models);
+        _selectedModel = string.IsNullOrWhiteSpace(_settings.ModelPath)
+            ? (models.Count > 0 ? models[0] : "")
+            : _settings.ModelPath;
+
         StartCommand = new RelayCommand(_ => StartAsync().ConfigureAwait(false), _ => CanStart);
         StopCommand = new RelayCommand(_ => StopAsync().ConfigureAwait(false), _ => CanStop);
         OpenBrowserCommand = new RelayCommand(_ => OpenBrowser(), _ => _serviceUri is not null);
         CopyApiCommand = new RelayCommand(_ => CopyApi(), _ => _serviceUri is not null);
+        BrowseModelCommand = new RelayCommand(_ => BrowseModel());
     }
 
     public ICommand StartCommand { get; }
     public ICommand StopCommand { get; }
     public ICommand OpenBrowserCommand { get; }
     public ICommand CopyApiCommand { get; }
+    public ICommand BrowseModelCommand { get; }
     public LogViewModel Log { get; } = new();
+
+    public ObservableCollection<string> Models { get; }
+    public string SelectedModel
+    {
+        get => _selectedModel;
+        set => SetProperty(ref _selectedModel, value ?? "");
+    }
 
     public string StatusText { get => _statusText; private set => SetProperty(ref _statusText, value); }
     public bool CanStart => _state is ServerLifecycleState.Stopped or ServerLifecycleState.Failed or ServerLifecycleState.StopFailed;
     public bool CanStop => _state is ServerLifecycleState.Running or ServerLifecycleState.UiReady or ServerLifecycleState.WaitingForUi;
     public string ApiBaseUrl => _serviceUri?.ToString().TrimEnd('/') ?? "";
 
+    private void BrowseModel()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Title = "选择 GGUF 模型",
+            Filter = "GGUF 模型 (*.gguf)|*.gguf|所有文件 (*.*)|*.*",
+            InitialDirectory = Path.GetDirectoryName(Path.GetFullPath(_settings.ModelPath)) ?? Environment.CurrentDirectory,
+        };
+        if (dialog.ShowDialog() == true)
+        {
+            if (!Models.Contains(dialog.FileName))
+            {
+                Models.Add(dialog.FileName);
+            }
+            SelectedModel = dialog.FileName;
+        }
+    }
+
     private async Task StartAsync()
     {
         _stopRequested = false;
+        _settings = _settings with { ModelPath = SelectedModel };
         var issues = SettingsValidator.Validate(_settings);
         if (issues.Count > 0)
         {

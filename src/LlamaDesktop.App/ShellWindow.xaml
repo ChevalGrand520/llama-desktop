@@ -26,6 +26,19 @@
         <ColumnDefinition Width="*"/>
       </Grid.ColumnDefinitions>
       <StackPanel Grid.Column="0" Margin="0,0,16,0">
+        <TextBlock Text="GGUF 模型" Margin="0,0,0,4" Foreground="#374151"/>
+        <Grid Margin="0,0,0,10">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <ComboBox x:Name="ModelPicker" ItemsSource="{Binding Models}"
+                    SelectedItem="{Binding SelectedModel, Mode=TwoWay}"
+                    MinHeight="32" VerticalContentAlignment="Center"
+                    ToolTip="选择要加载的 GGUF 模型"/>
+          <Button Grid.Column="1" Content="浏览..." Command="{Binding BrowseModelCommand}"
+                  MinWidth="72" Margin="8,0,0,0"/>
+        </Grid>
         <Button Content="启动服务" Command="{Binding StartCommand}" Height="40" Margin="0,0,0,8"/>
         <Button Content="停止服务" Command="{Binding StopCommand}" Height="40" Margin="0,0,0,8"/>
         <TextBlock Text="{Binding ApiBaseUrl}" TextWrapping="Wrap" Foreground="#5F6368"/>
