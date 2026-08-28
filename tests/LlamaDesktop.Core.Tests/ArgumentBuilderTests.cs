@@ -32,6 +32,10 @@ public class ArgumentBuilderTests
         Assert.Contains("--log-file", args);
         Assert.Contains("--ctx-size", args);
         Assert.Contains("8192", args);
+        var uiIndex = Array.IndexOf(args, "--ui");
+        Assert.True(uiIndex >= 0, "--ui must be emitted when the capability supports it");
+        Assert.True(uiIndex + 1 >= args.Length || args[uiIndex + 1] != "on",
+            "--ui is a boolean switch; it must not be followed by a value");
     }
 
     [Fact]

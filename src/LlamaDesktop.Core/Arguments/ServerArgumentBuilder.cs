@@ -24,8 +24,8 @@ public static class ServerArgumentBuilder
 
         if (caps.WebUi)
         {
+            // --ui is a boolean switch (no value); --ui on would fail with "invalid argument: on".
             args.Add("--ui");
-            args.Add("on");
         }
 
         args.Add("--ctx-size");
