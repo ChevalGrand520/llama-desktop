@@ -35,7 +35,19 @@ public static class ServerArgumentBuilder
         args.Add("--parallel");
         args.Add(s.Parallel.ToString());
 
-        if (caps.GpuLayersAllKeyword && s.GpuLayers == "all")
+        // When fit is active, omit --gpu-layers so llama-server can auto-partition layers
+        // across devices; passing both makes fit abort ("n_gpu_layers already set by user").
+        if (caps.Fit && s.FitMode == "on")
+        {
+            args.Add("--fit");
+            args.Add("on");
+            if (caps.FitTarget)
+            {
+                args.Add("--fit-target");
+                args.Add(s.FitTargetMiB.ToString());
+            }
+        }
+        else if (caps.GpuLayersAllKeyword && s.GpuLayers == "all")
         {
             args.Add("--gpu-layers");
             args.Add("all");
@@ -50,17 +62,6 @@ public static class ServerArgumentBuilder
         {
             args.Add("--flash-attn");
             args.Add(s.FlashAttention.ToLowerInvariant());
-        }
-
-        if (caps.Fit && s.FitMode == "on")
-        {
-            args.Add("--fit");
-            args.Add("on");
-            if (caps.FitTarget)
-            {
-                args.Add("--fit-target");
-                args.Add(s.FitTargetMiB.ToString());
-            }
         }
 
         if (caps.CacheTypeK && s.CacheTypeK != "f16")

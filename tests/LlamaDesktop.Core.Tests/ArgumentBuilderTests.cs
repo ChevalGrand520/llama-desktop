@@ -52,4 +52,24 @@ public class ArgumentBuilderTests
         Assert.False(ExtraArgumentPolicy.Validate(new[] { "--flash-attn", "on" }, out var e5) || e5.Count == 0);
         Assert.True(ExtraArgumentPolicy.Validate(new[] { "--verbose" }, out var e4) && e4.Count == 0);
     }
+
+    [Fact]
+    public void Fit_On_Omit_GpuLayers()
+    {
+        var args = ServerArgumentBuilder.Build(Settings(), @"C:\tmp\server.log",
+            CapabilitySnapshot.Full, logicalProcessors: 8);
+        Assert.Contains("--fit", args);
+        Assert.DoesNotContain("--gpu-layers", args);
+    }
+
+    [Fact]
+    public void Fit_Off_Emit_GpuLayers()
+    {
+        var caps = CapabilitySnapshot.Full with { Fit = false };
+        var s = Settings() with { FitMode = "off" };
+        var args = ServerArgumentBuilder.Build(s, @"C:\tmp\server.log", caps, logicalProcessors: 8);
+        Assert.DoesNotContain("--fit", args);
+        Assert.Contains("--gpu-layers", args);
+        Assert.Contains("all", args);
+    }
 }
