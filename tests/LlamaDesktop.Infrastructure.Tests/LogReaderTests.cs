@@ -36,10 +36,10 @@ public class LogReaderTests
         var path = Path.Combine(Path.GetTempPath(), "ld-log-" + Guid.NewGuid().ToString("N") + ".log");
         try
         {
-            File.WriteAllText(path, "aaaa", Encoding.UTF8);
+            File.WriteAllText(path, "aaaa", new UTF8Encoding(false));
             var reader = new IncrementalUtf8LogReader(path);
             Assert.Equal("aaaa", reader.ReadNew());
-            File.WriteAllText(path, "bb", Encoding.UTF8);
+            File.WriteAllText(path, "bb", new UTF8Encoding(false));
             Assert.Equal("bb", reader.ReadNew());
         }
         finally { try { File.Delete(path); } catch { } }
