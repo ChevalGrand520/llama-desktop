@@ -10,7 +10,7 @@ public class ArgumentBuilderTests
     private static ServerSettings Settings() =>
         ServerSettings.WithDefaults(logicalProcessorCount: 8, defaultModel: @"C:\model files\x.gguf") with
         {
-            Port = 18080, BatchSize = 1024, Parallel = 2, ModelsMax = 1,
+            Port = 18080, BatchSize = 1024, Parallel = 2,
         };
 
     [Fact]
@@ -23,8 +23,7 @@ public class ArgumentBuilderTests
     [Fact]
     public void Build_Produces_Single_Model_Arguments()
     {
-        var args = ServerArgumentBuilder.Build(Settings(), @"C:\tmp\server.log",
-            CapabilitySnapshot.Full, logicalProcessors: 8);
+        var args = ServerArgumentBuilder.Build(Settings(), @"C:\tmp\server.log", CapabilitySnapshot.Full);
         Assert.Contains("--model", args);
         Assert.Contains(@"C:\model files\x.gguf", args);
         Assert.Contains("--port", args);
@@ -39,10 +38,31 @@ public class ArgumentBuilderTests
     }
 
     [Fact]
+    public void Build_Uses_Settings_Threads()
+    {
+        var s = Settings() with { Threads = 12 };
+        var args = ServerArgumentBuilder.Build(s, @"C:\tmp\server.log", CapabilitySnapshot.Full);
+        var t = Array.IndexOf(args, "-t");
+        Assert.True(t >= 0 && t + 1 < args.Length && args[t + 1] == "12", "-t must use s.Threads");
+    }
+
+    [Fact]
+    public void Build_Emits_Explicit_Off_Values()
+    {
+        var s = Settings() with { FlashAttention = "off", ReasoningMode = "off", FitMode = "off" };
+        var args = ServerArgumentBuilder.Build(s, @"C:\tmp\server.log", CapabilitySnapshot.Full);
+        Assert.Contains("--flash-attn", args);
+        Assert.Contains("off", args);
+        Assert.Contains("--reasoning", args);
+        Assert.Contains("--fit", args);
+        Assert.Contains("--gpu-layers", args);
+    }
+
+    [Fact]
     public void Build_Gates_Unsupported_Flags()
     {
         var caps = CapabilitySnapshot.Unknown with { LogFile = false, Fit = false, HealthEndpoint = true };
-        var args = ServerArgumentBuilder.Build(Settings(), @"C:\tmp\server.log", caps, logicalProcessors: 8);
+        var args = ServerArgumentBuilder.Build(Settings(), @"C:\tmp\server.log", caps);
         Assert.DoesNotContain("--log-file", args);
         Assert.DoesNotContain("--fit", args);
     }
@@ -60,8 +80,7 @@ public class ArgumentBuilderTests
     [Fact]
     public void Fit_On_Omit_GpuLayers()
     {
-        var args = ServerArgumentBuilder.Build(Settings(), @"C:\tmp\server.log",
-            CapabilitySnapshot.Full, logicalProcessors: 8);
+        var args = ServerArgumentBuilder.Build(Settings(), @"C:\tmp\server.log", CapabilitySnapshot.Full);
         Assert.Contains("--fit", args);
         Assert.DoesNotContain("--gpu-layers", args);
     }
@@ -69,10 +88,9 @@ public class ArgumentBuilderTests
     [Fact]
     public void Fit_Off_Emit_GpuLayers()
     {
-        var caps = CapabilitySnapshot.Full with { Fit = false };
         var s = Settings() with { FitMode = "off" };
-        var args = ServerArgumentBuilder.Build(s, @"C:\tmp\server.log", caps, logicalProcessors: 8);
-        Assert.DoesNotContain("--fit", args);
+        var args = ServerArgumentBuilder.Build(s, @"C:\tmp\server.log", CapabilitySnapshot.Full);
+        Assert.Contains("--fit", args);
         Assert.Contains("--gpu-layers", args);
         Assert.Contains("all", args);
     }

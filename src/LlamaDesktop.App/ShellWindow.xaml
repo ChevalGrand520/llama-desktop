@@ -199,10 +199,6 @@
                     <TextBlock Text="生成上限" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
                     <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding MaxPredict, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                   </StackPanel>
-                  <StackPanel Grid.Column="2" Grid.Row="3" Margin="0,8,0,0">
-                    <TextBlock Text="最大模型数" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
-                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding ModelsMax, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                  </StackPanel>
                   <CheckBox Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="3" Margin="1,10,0,0"
                             IsChecked="{Binding AutoSelectPort, Mode=TwoWay}" Content="端口被占用时自动顺延"/>
                   <StackPanel Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="3" Margin="0,8,0,0">

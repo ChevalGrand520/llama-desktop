@@ -45,7 +45,6 @@ public sealed class ShellViewModel : ObservableObject
     private string _cacheTypeV = "q8_0";
     private string _reasoningMode = "off";
     private string _maxPredict = "8192";
-    private string _modelsMax = "1";
     private bool _autoSelectPort = true;
     private string _extraArguments = "";
 
@@ -77,7 +76,6 @@ public sealed class ShellViewModel : ObservableObject
         _cacheTypeV = _settings.CacheTypeV;
         _reasoningMode = _settings.ReasoningMode;
         _maxPredict = _settings.MaxPredict.ToString();
-        _modelsMax = _settings.ModelsMax.ToString();
         _autoSelectPort = _settings.AutoSelectPort;
         _extraArguments = _settings.ExtraArguments;
 
@@ -162,7 +160,6 @@ public sealed class ShellViewModel : ObservableObject
     public string CacheTypeV { get => _cacheTypeV; set => SetProperty(ref _cacheTypeV, value); }
     public string ReasoningMode { get => _reasoningMode; set => SetProperty(ref _reasoningMode, value); }
     public string MaxPredict { get => _maxPredict; set => SetProperty(ref _maxPredict, value); }
-    public string ModelsMax { get => _modelsMax; set => SetProperty(ref _modelsMax, value); }
     public bool AutoSelectPort { get => _autoSelectPort; set => SetProperty(ref _autoSelectPort, value); }
     public string ExtraArguments { get => _extraArguments; set => SetProperty(ref _extraArguments, value); }
 
@@ -229,7 +226,6 @@ public sealed class ShellViewModel : ObservableObject
         if (!TryPositiveInt(BatchSize, "批大小", out var batch)) return false;
         if (!TryPositiveInt(Parallel, "并行请求数", out var par)) return false;
         if (!TryPositiveInt(MaxPredict, "生成上限", out var mp)) return false;
-        if (!TryPositiveInt(ModelsMax, "最大模型数", out var mm)) return false;
 
         settings = _settings with
         {
@@ -245,7 +241,6 @@ public sealed class ShellViewModel : ObservableObject
             CacheTypeV = CacheTypeV.Trim(),
             ReasoningMode = ReasoningMode.Trim(),
             MaxPredict = mp,
-            ModelsMax = mm,
             AutoSelectPort = AutoSelectPort,
             ExtraArguments = ExtraArguments,
         };
@@ -302,8 +297,7 @@ public sealed class ShellViewModel : ObservableObject
             Log.Append($"保存配置失败：{ex.Message}");
         }
 
-        var args = ServerArgumentBuilder.Build(effective, _logPath, CapabilitySnapshot.Full,
-            logicalProcessors: Math.Max(1, Environment.ProcessorCount));
+        var args = ServerArgumentBuilder.Build(effective, _logPath, CapabilitySnapshot.Full);
         SetServiceUri(new Uri($"http://127.0.0.1:{port}"));
         _state = ServerLifecycleState.StartingProcess;
         StatusText = "启动中";
@@ -353,17 +347,21 @@ public sealed class ShellViewModel : ObservableObject
             while (_controller is { IsAlive: true })
             {
                 ReadLog();
-                if (await _health.ProbeAsync(_serviceUri!.ToString(), "health", CancellationToken.None))
+                if (!IsServiceReady)
                 {
-                    _state = ServerLifecycleState.Running;
-                    IsServiceReady = true;
-                    StatusText = "运行中";
-                    UpdateServerButtonState();
-                    _webView.NavigateToService(_serviceUri);
-                    break;
+                    if (await _health.ProbeAsync(_serviceUri!.ToString(), "health", CancellationToken.None))
+                    {
+                        _state = ServerLifecycleState.Running;
+                        IsServiceReady = true;
+                        StatusText = "运行中";
+                        UpdateServerButtonState();
+                        _webView.NavigateToService(_serviceUri);
+                    }
                 }
                 await Task.Delay(TimeSpan.FromSeconds(1));
             }
+            // Drain any final log lines after the process exits.
+            ReadLog();
         }
         catch (Exception ex)
         {
@@ -386,7 +384,9 @@ public sealed class ShellViewModel : ObservableObject
     {
         if (_controller is null) return;
         _stopRequested = true;
+        _state = ServerLifecycleState.Stopping;
         StatusText = "正在停止";
+        UpdateServerButtonState();
         var result = await _controller.StopAsync(new Progress<StopPhase>(phase =>
         {
             Log.Append($"停止阶段：{phase}");
@@ -413,6 +413,7 @@ public sealed class ShellViewModel : ObservableObject
         SetServiceUri(null);
         if (_stopRequested)
         {
+            _state = ServerLifecycleState.Stopped;
             StatusText = "已停止";
         }
         else

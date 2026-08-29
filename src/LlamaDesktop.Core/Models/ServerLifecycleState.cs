@@ -6,6 +6,7 @@ public enum ServerLifecycleState
     StartingProcess,
     WaitingForUi,
     Running,
+    Stopping,
     StopFailed,
     Failed,
 }

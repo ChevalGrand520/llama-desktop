@@ -4,13 +4,13 @@ namespace LlamaDesktop.Core.Arguments;
 
 public static class ServerArgumentBuilder
 {
-    public static string[] Build(ServerSettings s, string logPath, CapabilitySnapshot caps, int logicalProcessors)
+    public static string[] Build(ServerSettings s, string logPath, CapabilitySnapshot caps)
     {
         var args = new List<string>
         {
             "--host", s.Host,
             "--port", s.Port.ToString(),
-            "-t", Math.Max(1, logicalProcessors).ToString(),
+            "-t", Math.Max(1, s.Threads).ToString(),
         };
 
         if (caps.LogFile)
@@ -35,30 +35,36 @@ public static class ServerArgumentBuilder
         args.Add("--parallel");
         args.Add(s.Parallel.ToString());
 
-        // When fit is active, omit --gpu-layers so llama-server can auto-partition layers
-        // across devices; passing both makes fit abort ("n_gpu_layers already set by user").
-        if (caps.Fit && s.FitMode == "on")
+        // Emit the user's explicit choice for fit; never rely on the binary default.
+        var fitOn = caps.Fit && s.FitMode.Equals("on", StringComparison.OrdinalIgnoreCase);
+        if (caps.Fit)
         {
             args.Add("--fit");
-            args.Add("on");
-            if (caps.FitTarget)
+            args.Add(fitOn ? "on" : "off");
+            if (caps.FitTarget && fitOn)
             {
                 args.Add("--fit-target");
                 args.Add(s.FitTargetMiB.ToString());
             }
         }
-        else if (caps.GpuLayersAllKeyword && s.GpuLayers == "all")
+
+        // When fit is off, emit an explicit --gpu-layers; when fit is on, omit it so
+        // llama-server can auto-partition layers (passing both makes fit abort).
+        if (!fitOn)
         {
-            args.Add("--gpu-layers");
-            args.Add("all");
-        }
-        else if (int.TryParse(s.GpuLayers, out var layers))
-        {
-            args.Add("--gpu-layers");
-            args.Add(layers.ToString());
+            if (caps.GpuLayersAllKeyword && s.GpuLayers == "all")
+            {
+                args.Add("--gpu-layers");
+                args.Add("all");
+            }
+            else if (int.TryParse(s.GpuLayers, out var layers))
+            {
+                args.Add("--gpu-layers");
+                args.Add(layers.ToString());
+            }
         }
 
-        if (caps.FlashAttnValueSyntax && !s.FlashAttention.Equals("off", StringComparison.OrdinalIgnoreCase))
+        if (caps.FlashAttnValueSyntax)
         {
             args.Add("--flash-attn");
             args.Add(s.FlashAttention.ToLowerInvariant());
@@ -76,16 +82,10 @@ public static class ServerArgumentBuilder
             args.Add(s.CacheTypeV);
         }
 
-        if (caps.Reasoning && s.ReasoningMode == "on")
+        if (caps.Reasoning)
         {
             args.Add("--reasoning");
-            args.Add("on");
-        }
-
-        if (caps.ModelsDir && s.ModelsMax > 1)
-        {
-            args.Add("--models-max");
-            args.Add(s.ModelsMax.ToString());
+            args.Add(s.ReasoningMode.ToLowerInvariant());
         }
 
         args.Add("-n");
