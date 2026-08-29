@@ -26,9 +26,11 @@ public static class CompositionRoot
         var configStore = new JsonConfigStore(configPath, logs.Add);
         var legacyPath = Path.Combine(appRoot, "launcher-config.json");
 
-        var saved = configStore.Load()?.Settings
+        var loaded = configStore.Load();
+        var saved = loaded?.Settings
             ?? LegacyConfigImporter.TryImport(legacyPath)
             ?? ServerSettings.WithDefaults(Math.Max(1, Environment.ProcessorCount), "");
+        var uiState = loaded?.Ui ?? new UiState();
 
         var modelsDir = Path.Combine(appRoot, "models");
         var models = Directory.Exists(modelsDir)
@@ -47,7 +49,7 @@ public static class CompositionRoot
         _ = webViewHost.InitializeAsync(webViewData, CancellationToken.None);
 
         var viewModel = new ShellViewModel(
-            serverPath, logPath, configStore, webViewHost, effective, models);
+            serverPath, logPath, configStore, webViewHost, effective, models, uiState);
 
         var webView = new WebView2();
         Uri? serviceBase = null;

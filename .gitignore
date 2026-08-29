@@ -6,6 +6,22 @@ dist/
 *.log
 launcher-config.json
 launcher-server.log
+.vs/
+
+# llama.cpp runtime binaries (not our source; ship via Release zip only)
 llama-server.exe
+llama.exe
+llama-*.exe
+ggml-*.dll
+ggml-*.exe
 *.dll
+LICENSE-LLVM-OpenMP
+
+# model weights
 models/
+*.gguf
+*.bin
+*.safetensors
+
+# release artifacts
+*.zip

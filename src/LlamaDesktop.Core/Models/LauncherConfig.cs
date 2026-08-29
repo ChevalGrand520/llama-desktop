@@ -2,8 +2,9 @@ namespace LlamaDesktop.Core.Models;
 
 public sealed record UiState
 {
-    public bool LogDrawerOpen { get; init; }
-    public double LeftPanelWidth { get; init; } = 300;
+    public bool SidebarOpen { get; init; } = true;
+    public double SidebarWidth { get; init; } = 320;
+    public bool LogDrawerOpen { get; init; } = false;
 }
 
 public sealed record LauncherConfig

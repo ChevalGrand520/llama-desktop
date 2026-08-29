@@ -30,6 +30,10 @@ public sealed class ShellViewModel : ObservableObject
     private string _selectedModel = "";
     private Uri? _serviceUri;
     private bool _stopRequested;
+    private bool _isSidebarOpen = true;
+    private double _sidebarWidth = 320;
+    private bool _isLogDrawerOpen;
+    private bool _isSidebarAnimating;
 
     public ShellViewModel(
         string serverPath,
@@ -37,28 +41,32 @@ public sealed class ShellViewModel : ObservableObject
         JsonConfigStore configStore,
         WebViewHost webView,
         ServerSettings initialSettings,
-        IReadOnlyList<string> models)
+        IReadOnlyList<string> models,
+        UiState ui)
     {
         _serverPath = serverPath;
         _logPath = logPath;
         _configStore = configStore;
         _webView = webView;
         _settings = initialSettings;
+        _isSidebarOpen = ui.SidebarOpen;
+        _sidebarWidth = ui.SidebarWidth > 0 ? ui.SidebarWidth : 320;
+        _isLogDrawerOpen = ui.LogDrawerOpen;
 
         Models = new ObservableCollection<string>(models);
         _selectedModel = string.IsNullOrWhiteSpace(_settings.ModelPath)
             ? (models.Count > 0 ? models[0] : "")
             : _settings.ModelPath;
 
-        StartCommand = new RelayCommand(_ => StartAsync().ConfigureAwait(false), _ => CanStart);
-        StopCommand = new RelayCommand(_ => StopAsync().ConfigureAwait(false), _ => CanStop);
+        ToggleServerCommand = new RelayCommand(_ => ToggleServer(), _ => CanToggleServer);
+        ToggleSidebarCommand = new RelayCommand(_ => ToggleSidebar(), _ => !IsSidebarAnimating);
         OpenBrowserCommand = new RelayCommand(_ => OpenBrowser(), _ => _serviceUri is not null);
         CopyApiCommand = new RelayCommand(_ => CopyApi(), _ => _serviceUri is not null);
         BrowseModelCommand = new RelayCommand(_ => BrowseModel());
     }
 
-    public ICommand StartCommand { get; }
-    public ICommand StopCommand { get; }
+    public ICommand ToggleServerCommand { get; }
+    public ICommand ToggleSidebarCommand { get; }
     public ICommand OpenBrowserCommand { get; }
     public ICommand CopyApiCommand { get; }
     public ICommand BrowseModelCommand { get; }
@@ -74,7 +82,78 @@ public sealed class ShellViewModel : ObservableObject
     public string StatusText { get => _statusText; private set => SetProperty(ref _statusText, value); }
     public bool CanStart => _state is ServerLifecycleState.Stopped or ServerLifecycleState.Failed or ServerLifecycleState.StopFailed;
     public bool CanStop => _state is ServerLifecycleState.Running or ServerLifecycleState.UiReady or ServerLifecycleState.WaitingForUi;
+    public bool CanToggleServer => CanStart || CanStop;
+    public string StartStopLabel => CanStop ? "停止服务" : "启动服务";
     public string ApiBaseUrl => _serviceUri?.ToString().TrimEnd('/') ?? "";
+
+    public bool IsSidebarOpen
+    {
+        get => _isSidebarOpen;
+        private set => SetProperty(ref _isSidebarOpen, value);
+    }
+
+    public double SidebarWidth
+    {
+        get => _sidebarWidth;
+        private set => SetProperty(ref _sidebarWidth, value);
+    }
+
+    public bool IsLogDrawerOpen
+    {
+        get => _isLogDrawerOpen;
+        set
+        {
+            if (SetProperty(ref _isLogDrawerOpen, value)) SaveUiState();
+        }
+    }
+
+    public bool IsSidebarAnimating
+    {
+        get => _isSidebarAnimating;
+        set
+        {
+            if (SetProperty(ref _isSidebarAnimating, value)) CommandManager.InvalidateRequerySuggested();
+        }
+    }
+
+    public string SidebarToggleToolTip => IsSidebarOpen ? "收起侧栏" : "展开侧栏";
+
+    private void ToggleSidebar()
+    {
+        if (IsSidebarAnimating) return;
+        IsSidebarOpen = !IsSidebarOpen;
+        OnPropertyChanged(nameof(SidebarToggleToolTip));
+        SaveUiState();
+    }
+
+    private void ToggleServer()
+    {
+        if (CanStart) StartAsync().ConfigureAwait(false);
+        else if (CanStop) StopAsync().ConfigureAwait(false);
+    }
+
+    /// <summary>持久化界面状态（侧栏收纳/宽度、日志抽屉）。由切换动作即时调用，窗口关闭时兜底调用。</summary>
+    public void SaveUiState()
+    {
+        try
+        {
+            var config = new LauncherConfig
+            {
+                Settings = _settings,
+                Ui = new UiState
+                {
+                    SidebarOpen = IsSidebarOpen,
+                    SidebarWidth = SidebarWidth,
+                    LogDrawerOpen = IsLogDrawerOpen,
+                },
+            };
+            _configStore.Save(config);
+        }
+        catch (Exception ex)
+        {
+            Log.Append($"保存界面状态失败：{ex.Message}");
+        }
+    }
 
     private void BrowseModel()
     {
@@ -138,6 +217,7 @@ public sealed class ShellViewModel : ObservableObject
         _serviceUri = new Uri($"http://127.0.0.1:{port}");
         _state = ServerLifecycleState.StartingProcess;
         StatusText = "启动中";
+        UpdateServerButtonState();
 
         try
         {
@@ -156,10 +236,12 @@ public sealed class ShellViewModel : ObservableObject
                     _state = ServerLifecycleState.Failed;
                     StatusText = $"启动失败（退出码 {code}）";
                 }
+                UpdateServerButtonState();
             };
             var proc = _controller.Start(_serverPath, WindowsArgumentQuoter.Quote(args));
             Log.Append($"已启动 llama-server，PID：{proc.Id}");
             _state = ServerLifecycleState.WaitingForUi;
+            UpdateServerButtonState();
             _ = PollHealthAsync(effective);
         }
         catch (Exception ex)
@@ -167,6 +249,7 @@ public sealed class ShellViewModel : ObservableObject
             _state = ServerLifecycleState.Failed;
             StatusText = "启动失败";
             Log.Append($"启动服务失败：{ex.Message}");
+            UpdateServerButtonState();
         }
     }
 
@@ -179,6 +262,7 @@ public sealed class ShellViewModel : ObservableObject
             {
                 _state = ServerLifecycleState.Running;
                 StatusText = "运行中";
+                UpdateServerButtonState();
                 _webView.NavigateToServiceAsync(_serviceUri, CancellationToken.None);
                 break;
             }
@@ -216,6 +300,14 @@ public sealed class ShellViewModel : ObservableObject
             _state = ServerLifecycleState.StopFailed;
             StatusText = result.Message;
         }
+        UpdateServerButtonState();
+    }
+
+    private void UpdateServerButtonState()
+    {
+        OnPropertyChanged(nameof(StartStopLabel));
+        OnPropertyChanged(nameof(CanToggleServer));
+        CommandManager.InvalidateRequerySuggested();
     }
 
     private void OpenBrowser()

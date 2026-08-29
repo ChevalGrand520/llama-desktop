@@ -1,5 +1,7 @@
 using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Windows;
+using System.Windows.Media.Animation;
 using LlamaDesktop.App.Presentation.ViewModels;
 using Microsoft.Web.WebView2.Wpf;
 
@@ -18,6 +20,39 @@ public partial class ShellWindow : Window
         _viewModel = viewModel;
         WebHostGrid.Children.Add(webView);
         viewModel.Log.Lines.CollectionChanged += OnLogLinesChanged;
+        viewModel.PropertyChanged += OnViewModelPropertyChanged;
+
+        SidebarContainer.Width = viewModel.IsSidebarOpen ? viewModel.SidebarWidth : 0;
+        SidebarContainer.Visibility = viewModel.IsSidebarOpen ? Visibility.Visible : Visibility.Collapsed;
+
+        Closing += (_, _) => viewModel.SaveUiState();
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ShellViewModel.IsSidebarOpen))
+        {
+            AnimateSidebar(_viewModel.IsSidebarOpen);
+        }
+    }
+
+    private void AnimateSidebar(bool open)
+    {
+        _viewModel.IsSidebarAnimating = true;
+        var target = open ? _viewModel.SidebarWidth : 0;
+        var animation = new DoubleAnimation(target, TimeSpan.FromMilliseconds(150))
+        {
+            FillBehavior = FillBehavior.Stop,
+        };
+        animation.Completed += (_, _) =>
+        {
+            SidebarContainer.Width = target;
+            SidebarContainer.BeginAnimation(FrameworkElement.WidthProperty, null);
+            SidebarContainer.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+            _viewModel.IsSidebarAnimating = false;
+        };
+        if (open) SidebarContainer.Visibility = Visibility.Visible;
+        SidebarContainer.BeginAnimation(FrameworkElement.WidthProperty, animation);
     }
 
     private void OnLogLinesChanged(object? sender, NotifyCollectionChangedEventArgs e)
