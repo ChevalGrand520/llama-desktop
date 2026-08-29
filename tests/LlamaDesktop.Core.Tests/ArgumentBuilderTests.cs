@@ -59,6 +59,22 @@ public class ArgumentBuilderTests
     }
 
     [Fact]
+    public void Build_Emits_Mmproj_When_Present()
+    {
+        var s = Settings() with { MmprojPath = @"C:\models\mmproj.gguf" };
+        var args = ServerArgumentBuilder.Build(s, @"C:\tmp\server.log", CapabilitySnapshot.Full);
+        Assert.Contains("--mmproj", args);
+        Assert.Contains(@"C:\models\mmproj.gguf", args);
+    }
+
+    [Fact]
+    public void Build_Omits_Mmproj_When_Empty()
+    {
+        var args = ServerArgumentBuilder.Build(Settings(), @"C:\tmp\server.log", CapabilitySnapshot.Full);
+        Assert.DoesNotContain("--mmproj", args);
+    }
+
+    [Fact]
     public void Build_Gates_Unsupported_Flags()
     {
         var caps = CapabilitySnapshot.Unknown with { LogFile = false, Fit = false, HealthEndpoint = true };

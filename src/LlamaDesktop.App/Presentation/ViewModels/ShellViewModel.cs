@@ -47,6 +47,9 @@ public sealed class ShellViewModel : ObservableObject
     private string _maxPredict = "8192";
     private bool _autoSelectPort = true;
     private string _extraArguments = "";
+    private readonly IReadOnlyDictionary<string, string> _mmprojByModel;
+    private string _currentMmproj = "";
+    private bool _hasMultimodal;
 
     public ShellViewModel(
         string serverPath,
@@ -55,13 +58,15 @@ public sealed class ShellViewModel : ObservableObject
         WebViewHost webView,
         ServerSettings initialSettings,
         IReadOnlyList<string> models,
-        UiState ui)
+        UiState ui,
+        IReadOnlyDictionary<string, string> mmprojByModel)
     {
         _serverPath = serverPath;
         _logPath = logPath;
         _configStore = configStore;
         _webView = webView;
         _settings = initialSettings;
+        _mmprojByModel = mmprojByModel;
         _isSidebarOpen = ui.SidebarOpen;
         SidebarWidth = ui.SidebarWidth > 0 ? ui.SidebarWidth : 320;
         _isLogDrawerOpen = ui.LogDrawerOpen;
@@ -89,6 +94,8 @@ public sealed class ShellViewModel : ObservableObject
         OpenBrowserCommand = new RelayCommand(_ => OpenBrowser(), _ => IsServiceReady);
         CopyApiCommand = new RelayCommand(_ => CopyApi(), _ => IsServiceReady);
         BrowseModelCommand = new RelayCommand(_ => BrowseModel());
+
+        UpdateMmproj();
     }
 
     public ICommand ToggleServerCommand { get; }
@@ -102,7 +109,21 @@ public sealed class ShellViewModel : ObservableObject
     public string SelectedModel
     {
         get => _selectedModel;
-        set => SetProperty(ref _selectedModel, value ?? "");
+        set
+        {
+            if (SetProperty(ref _selectedModel, value ?? "")) UpdateMmproj();
+        }
+    }
+
+    public string CurrentMmproj { get => _currentMmproj; private set => SetProperty(ref _currentMmproj, value); }
+    public bool HasMultimodal { get => _hasMultimodal; private set => SetProperty(ref _hasMultimodal, value); }
+    public string MultimodalLabel => HasMultimodal ? "多模态 ✓" : "多模态 —";
+
+    private void UpdateMmproj()
+    {
+        CurrentMmproj = _mmprojByModel.TryGetValue(SelectedModel, out var mmproj) ? mmproj : "";
+        HasMultimodal = CurrentMmproj.Length > 0;
+        OnPropertyChanged(nameof(MultimodalLabel));
     }
 
     public string StatusText { get => _statusText; private set => SetProperty(ref _statusText, value); }
@@ -230,6 +251,7 @@ public sealed class ShellViewModel : ObservableObject
         settings = _settings with
         {
             ModelPath = SelectedModel,
+            MmprojPath = CurrentMmproj,
             GpuLayers = GpuLayers.Trim(),
             ContextSize = ctx,
             Threads = thr,

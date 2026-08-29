@@ -127,6 +127,7 @@
                       Data="M3,5 A2,2 0 0 1 5,3 H9 L11,5 H19 A2,2 0 0 1 21,7 V18 A2,2 0 0 1 19,20 H5 A2,2 0 0 1 3,18 Z"/>
               </Button>
             </Grid>
+            <TextBlock Text="{Binding MultimodalLabel}" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" Margin="1,5,0,0"/>
           </StackPanel>
 
           <Button Grid.Row="2" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding ToggleServerCommand}"

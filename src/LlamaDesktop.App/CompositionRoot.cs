@@ -4,6 +4,7 @@ using Microsoft.Web.WebView2.Wpf;
 using LlamaDesktop.App.Presentation.ViewModels;
 using LlamaDesktop.App.Web;
 using LlamaDesktop.Core.Models;
+using LlamaDesktop.Core.Services;
 using LlamaDesktop.Infrastructure.Persistence;
 
 namespace LlamaDesktop.App;
@@ -46,12 +47,15 @@ public static class CompositionRoot
             if (parent is null) break;
             probe = parent;
         }
-        var models = modelsDirs
+        var allGguf = modelsDirs
             .Where(Directory.Exists)
             .SelectMany(d => Directory.EnumerateFiles(d, "*.gguf", SearchOption.AllDirectories))
             .Where(f => !Path.GetFileName(f).StartsWith("Modelfile."))
-            .Where(f => !Path.GetFileName(f).Contains("mmproj", StringComparison.OrdinalIgnoreCase))
             .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        var mmprojByModel = MmprojPairing.Pair(allGguf);
+        var models = allGguf
+            .Where(f => !MmprojPairing.IsMmproj(f))
             .OrderBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase)
             .ToArray();
         var firstModel = models.FirstOrDefault() ?? "";
@@ -75,7 +79,7 @@ public static class CompositionRoot
         }
 
         var viewModel = new ShellViewModel(
-            serverPath, logPath, configStore, webViewHost, effective, models, uiState);
+            serverPath, logPath, configStore, webViewHost, effective, models, uiState, mmprojByModel);
 
         var webView = new WebView2();
         Uri? serviceBase = null;

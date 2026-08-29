@@ -3,6 +3,7 @@ namespace LlamaDesktop.Core.Models;
 public sealed record ServerSettings
 {
     public required string ModelPath { get; init; }
+    public required string MmprojPath { get; init; }
     public required string ModelsDirectory { get; init; }
     public required string Host { get; init; }
     public required int Port { get; init; }
@@ -26,6 +27,7 @@ public sealed record ServerSettings
         new()
         {
             ModelPath = defaultModel,
+            MmprojPath = "",
             ModelsDirectory = @"models",
             Host = "127.0.0.1",
             Port = 8080,

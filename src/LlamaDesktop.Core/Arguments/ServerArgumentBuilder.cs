@@ -22,6 +22,12 @@ public static class ServerArgumentBuilder
         args.Add("--model");
         args.Add(s.ModelPath);
 
+        if (!string.IsNullOrWhiteSpace(s.MmprojPath))
+        {
+            args.Add("--mmproj");
+            args.Add(s.MmprojPath);
+        }
+
         if (caps.WebUi)
         {
             // --ui is a boolean switch (no value); --ui on would fail with "invalid argument: on".
