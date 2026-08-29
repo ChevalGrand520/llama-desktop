@@ -4,6 +4,8 @@
 
 A lightweight, portable, zero-dependency desktop shell for [llama.cpp](https://github.com/ggml-org/llama.cpp). Manage models, launch `llama-server`, and chat — all in one green, single-folder app. No Python, no Node.js, no .NET SDK, no installation.
 
+![Llama Desktop](docs/screenshots/llama-desktop-v1.1.png)
+
 ---
 
 ## 为什么选 Llama Desktop / Why
