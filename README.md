@@ -19,6 +19,8 @@ A lightweight, portable, zero-dependency desktop shell for [llama.cpp](https://g
 
 ## 快速开始 / Quick Start
 
+> ⚠️ **便携包不含模型权重文件。** 请自备 GGUF 模型放入 `models\` 目录后启动（体积约 400MB～几十 GB，无法随包分发）。
+
 1. 从 [Releases](../../releases) 下载 `llama-desktop-win-x64.zip`（绿色便携包，含 CUDA 版 `llama-server.exe`）。
 2. 解压到任意目录（无需安装）。
 3. 双击 `LlamaDesktop.exe`。
