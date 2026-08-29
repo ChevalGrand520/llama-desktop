@@ -4,8 +4,9 @@ foreach ($required in @('LlamaDesktop.exe','llama-server.exe','启动Llama.cmd',
     $hit = Get-ChildItem $out -Recurse -Filter $required -File -ErrorAction SilentlyContinue
     if (-not $hit) { throw "缺少发布文件：$required" }
 }
-$ggufCount = @(Get-ChildItem (Join-Path $out 'models') -Recurse -Filter '*.gguf' -File -ErrorAction SilentlyContinue).Count
-if ($ggufCount -eq 0) { throw '发布目录中没有 GGUF 模型。' }
+$modelsDirectory = Join-Path $out 'models'
+if (-not (Test-Path -LiteralPath $modelsDirectory -PathType Container)) { throw '缺少模型目录：models' }
+$ggufCount = @(Get-ChildItem $modelsDirectory -Recurse -Filter '*.gguf' -File -ErrorAction SilentlyContinue).Count
 # Runtime gate: the published server binary must actually execute (loads its DLL closure).
 # Pin the working directory to the publish output so the binary cannot borrow DLLs from the caller's CWD.
 foreach ($closureDll in @('llama-server-impl.dll','llama-common.dll','llama.dll','mtmd.dll','libomp.dll','cublas64_13.dll','cudart64_13.dll','ggml-cuda.dll')) {
@@ -20,4 +21,4 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "llama-server 无法运行（DLL 缺失或损坏）：`n$versionOutput" }
 }
 finally { Pop-Location }
-Write-Host "Publish verification OK. GGUF count: $ggufCount"
+Write-Host "Publish verification OK. Bundled GGUF count: $ggufCount (weights are optional)."

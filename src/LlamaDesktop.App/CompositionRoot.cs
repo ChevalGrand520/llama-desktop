@@ -46,7 +46,7 @@ public static class CompositionRoot
             : saved;
 
         var webViewHost = new WebViewHost();
-        _ = webViewHost.InitializeAsync(webViewData, CancellationToken.None);
+        _ = webViewHost.InitializeAsync(webViewData);
 
         var viewModel = new ShellViewModel(
             serverPath, logPath, configStore, webViewHost, effective, models, uiState);

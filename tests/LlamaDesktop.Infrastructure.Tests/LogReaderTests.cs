@@ -7,7 +7,7 @@ namespace LlamaDesktop.Infrastructure.Tests;
 public class LogReaderTests
 {
     [Fact]
-    public async Task Multibyte_Characters_Split_Across_Chunks_Are_Decoded()
+    public void Multibyte_Characters_Split_Across_Chunks_Are_Decoded()
     {
         var path = Path.Combine(Path.GetTempPath(), "ld-log-" + Guid.NewGuid().ToString("N") + ".log");
         try
@@ -18,7 +18,7 @@ public class LogReaderTests
             {
                 fs.Write(bytes, 0, split);
             }
-            var reader = new IncrementalUtf8LogReader(path);
+            using var reader = new IncrementalUtf8LogReader(path);
             var first = reader.ReadNew();
             using (var fs = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
             {
@@ -37,7 +37,7 @@ public class LogReaderTests
         try
         {
             File.WriteAllText(path, "aaaa", new UTF8Encoding(false));
-            var reader = new IncrementalUtf8LogReader(path);
+            using var reader = new IncrementalUtf8LogReader(path);
             Assert.Equal("aaaa", reader.ReadNew());
             File.WriteAllText(path, "bb", new UTF8Encoding(false));
             Assert.Equal("bb", reader.ReadNew());

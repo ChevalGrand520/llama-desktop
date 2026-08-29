@@ -14,5 +14,5 @@ Get-ChildItem (Join-Path $root '*.dll') -File -ErrorAction SilentlyContinue | Co
 Copy-Item (Join-Path $root '启动Llama.cmd') $out -Force
 Copy-Item (Join-Path $root 'LlamaLauncher.ps1') $out -Force
 Copy-Item (Join-Path $root 'Launcher.Core.psm1') $out -Force
-if (-not (Test-Path (Join-Path $out 'models'))) { Copy-Item (Join-Path $root 'models') $out -Recurse -Force }
+New-Item -ItemType Directory -Path (Join-Path $out 'models') -Force | Out-Null
 Write-Host "Published to $out"

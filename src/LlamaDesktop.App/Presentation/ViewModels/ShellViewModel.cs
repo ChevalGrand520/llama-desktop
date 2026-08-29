@@ -31,9 +31,9 @@ public sealed class ShellViewModel : ObservableObject
     private Uri? _serviceUri;
     private bool _stopRequested;
     private bool _isSidebarOpen = true;
-    private double _sidebarWidth = 320;
     private bool _isLogDrawerOpen;
     private bool _isSidebarAnimating;
+    private bool _isServiceReady;
 
     public ShellViewModel(
         string serverPath,
@@ -50,7 +50,7 @@ public sealed class ShellViewModel : ObservableObject
         _webView = webView;
         _settings = initialSettings;
         _isSidebarOpen = ui.SidebarOpen;
-        _sidebarWidth = ui.SidebarWidth > 0 ? ui.SidebarWidth : 320;
+        SidebarWidth = ui.SidebarWidth > 0 ? ui.SidebarWidth : 320;
         _isLogDrawerOpen = ui.LogDrawerOpen;
 
         Models = new ObservableCollection<string>(models);
@@ -60,8 +60,8 @@ public sealed class ShellViewModel : ObservableObject
 
         ToggleServerCommand = new RelayCommand(_ => ToggleServer(), _ => CanToggleServer);
         ToggleSidebarCommand = new RelayCommand(_ => ToggleSidebar(), _ => !IsSidebarAnimating);
-        OpenBrowserCommand = new RelayCommand(_ => OpenBrowser(), _ => _serviceUri is not null);
-        CopyApiCommand = new RelayCommand(_ => CopyApi(), _ => _serviceUri is not null);
+        OpenBrowserCommand = new RelayCommand(_ => OpenBrowser(), _ => IsServiceReady);
+        CopyApiCommand = new RelayCommand(_ => CopyApi(), _ => IsServiceReady);
         BrowseModelCommand = new RelayCommand(_ => BrowseModel());
     }
 
@@ -80,11 +80,19 @@ public sealed class ShellViewModel : ObservableObject
     }
 
     public string StatusText { get => _statusText; private set => SetProperty(ref _statusText, value); }
-    public bool CanStart => _state is ServerLifecycleState.Stopped or ServerLifecycleState.Failed or ServerLifecycleState.StopFailed;
-    public bool CanStop => _state is ServerLifecycleState.Running or ServerLifecycleState.UiReady or ServerLifecycleState.WaitingForUi;
-    public bool CanToggleServer => CanStart || CanStop;
+    private bool CanStart => _state is ServerLifecycleState.Stopped or ServerLifecycleState.Failed or ServerLifecycleState.StopFailed;
+    private bool CanStop => _state is ServerLifecycleState.Running or ServerLifecycleState.UiReady or ServerLifecycleState.WaitingForUi;
+    private bool CanToggleServer => CanStart || CanStop;
     public string StartStopLabel => CanStop ? "停止服务" : "启动服务";
-    public string ApiBaseUrl => _serviceUri?.ToString().TrimEnd('/') ?? "";
+    public string ApiBaseUrl => _serviceUri?.ToString().TrimEnd('/') ?? "服务启动后可用";
+    public bool IsServiceReady
+    {
+        get => _isServiceReady;
+        private set
+        {
+            if (SetProperty(ref _isServiceReady, value)) CommandManager.InvalidateRequerySuggested();
+        }
+    }
 
     public bool IsSidebarOpen
     {
@@ -92,11 +100,7 @@ public sealed class ShellViewModel : ObservableObject
         private set => SetProperty(ref _isSidebarOpen, value);
     }
 
-    public double SidebarWidth
-    {
-        get => _sidebarWidth;
-        private set => SetProperty(ref _sidebarWidth, value);
-    }
+    public double SidebarWidth { get; }
 
     public bool IsLogDrawerOpen
     {
@@ -128,8 +132,8 @@ public sealed class ShellViewModel : ObservableObject
 
     private void ToggleServer()
     {
-        if (CanStart) StartAsync().ConfigureAwait(false);
-        else if (CanStop) StopAsync().ConfigureAwait(false);
+        if (CanStart) Start();
+        else if (CanStop) _ = StopAsync();
     }
 
     /// <summary>持久化界面状态（侧栏收纳/宽度、日志抽屉）。由切换动作即时调用，窗口关闭时兜底调用。</summary>
@@ -173,9 +177,10 @@ public sealed class ShellViewModel : ObservableObject
         }
     }
 
-    private async Task StartAsync()
+    private void Start()
     {
         _stopRequested = false;
+        IsServiceReady = false;
         _settings = _settings with { ModelPath = SelectedModel };
         var issues = SettingsValidator.Validate(_settings);
         if (issues.Count > 0)
@@ -214,7 +219,7 @@ public sealed class ShellViewModel : ObservableObject
 
         var args = ServerArgumentBuilder.Build(effective, _logPath, CapabilitySnapshot.Full,
             logicalProcessors: Math.Max(1, Environment.ProcessorCount));
-        _serviceUri = new Uri($"http://127.0.0.1:{port}");
+        SetServiceUri(new Uri($"http://127.0.0.1:{port}"));
         _state = ServerLifecycleState.StartingProcess;
         StatusText = "启动中";
         UpdateServerButtonState();
@@ -225,19 +230,8 @@ public sealed class ShellViewModel : ObservableObject
             _logReader = new IncrementalUtf8LogReader(_logPath);
             _controller = new LlamaServerController();
             _controller.ProcessExited += code =>
-            {
-                Log.Append($"llama-server 已退出，退出码：{code}");
-                if (_stopRequested)
-                {
-                    StatusText = "已停止";
-                }
-                else
-                {
-                    _state = ServerLifecycleState.Failed;
-                    StatusText = $"启动失败（退出码 {code}）";
-                }
-                UpdateServerButtonState();
-            };
+                System.Windows.Application.Current.Dispatcher.BeginInvoke(
+                    new Action(() => HandleProcessExit(code)));
             var proc = _controller.Start(_serverPath, WindowsArgumentQuoter.Quote(args));
             Log.Append($"已启动 llama-server，PID：{proc.Id}");
             _state = ServerLifecycleState.WaitingForUi;
@@ -247,6 +241,8 @@ public sealed class ShellViewModel : ObservableObject
         catch (Exception ex)
         {
             _state = ServerLifecycleState.Failed;
+            IsServiceReady = false;
+            SetServiceUri(null);
             StatusText = "启动失败";
             Log.Append($"启动服务失败：{ex.Message}");
             UpdateServerButtonState();
@@ -261,9 +257,10 @@ public sealed class ShellViewModel : ObservableObject
             if (await _health.ProbeAsync(_serviceUri!.ToString(), "health", CancellationToken.None))
             {
                 _state = ServerLifecycleState.Running;
+                IsServiceReady = true;
                 StatusText = "运行中";
                 UpdateServerButtonState();
-                _webView.NavigateToServiceAsync(_serviceUri, CancellationToken.None);
+                _webView.NavigateToService(_serviceUri);
                 break;
             }
             await Task.Delay(TimeSpan.FromSeconds(1));
@@ -293,6 +290,8 @@ public sealed class ShellViewModel : ObservableObject
         if (result.Succeeded)
         {
             _state = ServerLifecycleState.Stopped;
+            IsServiceReady = false;
+            SetServiceUri(null);
             StatusText = "已停止";
         }
         else
@@ -303,10 +302,34 @@ public sealed class ShellViewModel : ObservableObject
         UpdateServerButtonState();
     }
 
+    private void HandleProcessExit(int code)
+    {
+        Log.Append($"llama-server 已退出，退出码：{code}");
+        IsServiceReady = false;
+        SetServiceUri(null);
+        if (_stopRequested)
+        {
+            StatusText = "已停止";
+        }
+        else
+        {
+            _state = ServerLifecycleState.Failed;
+            StatusText = $"启动失败（退出码 {code}）";
+        }
+        UpdateServerButtonState();
+    }
+
+    private void SetServiceUri(Uri? uri)
+    {
+        if (_serviceUri == uri) return;
+        _serviceUri = uri;
+        OnPropertyChanged(nameof(ApiBaseUrl));
+        CommandManager.InvalidateRequerySuggested();
+    }
+
     private void UpdateServerButtonState()
     {
         OnPropertyChanged(nameof(StartStopLabel));
-        OnPropertyChanged(nameof(CanToggleServer));
         CommandManager.InvalidateRequerySuggested();
     }
 

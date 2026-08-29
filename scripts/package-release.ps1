@@ -14,8 +14,9 @@ if (-not (Test-Path (Join-Path $dist 'llama-server.exe'))) { throw "dist\LlamaDe
 if (Test-Path $staging) { Remove-Item $staging -Recurse -Force }
 New-Item -ItemType Directory -Path $staging -Force | Out-Null
 
-# Copy everything except the WebView2 runtime cache (regenerated on first run).
-$exclude = @('LlamaDesktop.exe.WebView2')
+# Copy everything except the WebView2 runtime cache (regenerated on first run)
+# and model weights (user downloads those separately).
+$exclude = @('LlamaDesktop.exe.WebView2', 'models')
 Get-ChildItem $dist | Where-Object { $exclude -notcontains $_.Name } | ForEach-Object {
     Copy-Item $_.FullName -Destination $staging -Recurse -Force
 }

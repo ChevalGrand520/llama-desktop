@@ -19,6 +19,7 @@ public partial class ShellWindow : Window
         _webView = webView;
         _viewModel = viewModel;
         WebHostGrid.Children.Add(webView);
+        _webView.Visibility = viewModel.IsServiceReady ? Visibility.Visible : Visibility.Collapsed;
         viewModel.Log.Lines.CollectionChanged += OnLogLinesChanged;
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
 
@@ -34,15 +35,20 @@ public partial class ShellWindow : Window
         {
             AnimateSidebar(_viewModel.IsSidebarOpen);
         }
+        else if (e.PropertyName == nameof(ShellViewModel.IsServiceReady))
+        {
+            _webView.Visibility = _viewModel.IsServiceReady ? Visibility.Visible : Visibility.Collapsed;
+        }
     }
 
     private void AnimateSidebar(bool open)
     {
         _viewModel.IsSidebarAnimating = true;
         var target = open ? _viewModel.SidebarWidth : 0;
-        var animation = new DoubleAnimation(target, TimeSpan.FromMilliseconds(150))
+        var animation = new DoubleAnimation(target, TimeSpan.FromMilliseconds(180))
         {
             FillBehavior = FillBehavior.Stop,
+            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut },
         };
         animation.Completed += (_, _) =>
         {
