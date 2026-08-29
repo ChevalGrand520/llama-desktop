@@ -37,6 +37,8 @@ public sealed class LlamaServerController
         CancellationToken ct)
     {
         if (_process is null) return StopResult.Failed("未跟踪进程。");
+        if (_identity is null || !_identity.Matches(_process))
+            return StopResult.Failed("进程身份校验失败，拒绝停止。");
         progress.Report(StopPhase.Graceful);
         try { _process.CloseMainWindow(); } catch { }
 

@@ -60,7 +60,19 @@ public static class CompositionRoot
             : saved;
 
         var webViewHost = new WebViewHost();
-        _ = webViewHost.InitializeAsync(webViewData);
+        _ = InitializeHostAsync(webViewHost, webViewData);
+
+        async Task InitializeHostAsync(WebViewHost host, string data)
+        {
+            try
+            {
+                await host.InitializeAsync(data);
+            }
+            catch (Exception ex)
+            {
+                logs.Add($"WebView2 环境初始化失败：{ex.Message}");
+            }
+        }
 
         var viewModel = new ShellViewModel(
             serverPath, logPath, configStore, webViewHost, effective, models, uiState);
@@ -93,7 +105,15 @@ public static class CompositionRoot
         {
             // CoreWebView2 is only available after initialization; attach the
             // new-window handler once the runtime exists to avoid an NRE.
-            await wv.EnsureCoreWebView2Async();
+            try
+            {
+                await wv.EnsureCoreWebView2Async();
+            }
+            catch (Exception ex)
+            {
+                logs.Add($"WebView2 控件初始化失败：{ex.Message}");
+                return;
+            }
             if (wv.CoreWebView2 is null) return;
             wv.CoreWebView2.NewWindowRequested += (_, e) =>
             {

@@ -34,6 +34,20 @@ public sealed class ShellViewModel : ObservableObject
     private bool _isLogDrawerOpen;
     private bool _isSidebarAnimating;
     private bool _isServiceReady;
+    private string _gpuLayers = "all";
+    private string _contextSize = "8192";
+    private string _threads = "24";
+    private string _batchSize = "2048";
+    private string _parallel = "1";
+    private string _flashAttention = "on";
+    private string _fitMode = "on";
+    private string _cacheTypeK = "q8_0";
+    private string _cacheTypeV = "q8_0";
+    private string _reasoningMode = "off";
+    private string _maxPredict = "8192";
+    private string _modelsMax = "1";
+    private bool _autoSelectPort = true;
+    private string _extraArguments = "";
 
     public ShellViewModel(
         string serverPath,
@@ -52,6 +66,20 @@ public sealed class ShellViewModel : ObservableObject
         _isSidebarOpen = ui.SidebarOpen;
         SidebarWidth = ui.SidebarWidth > 0 ? ui.SidebarWidth : 320;
         _isLogDrawerOpen = ui.LogDrawerOpen;
+        _gpuLayers = _settings.GpuLayers;
+        _contextSize = _settings.ContextSize.ToString();
+        _threads = _settings.Threads.ToString();
+        _batchSize = _settings.BatchSize.ToString();
+        _parallel = _settings.Parallel.ToString();
+        _flashAttention = _settings.FlashAttention;
+        _fitMode = _settings.FitMode;
+        _cacheTypeK = _settings.CacheTypeK;
+        _cacheTypeV = _settings.CacheTypeV;
+        _reasoningMode = _settings.ReasoningMode;
+        _maxPredict = _settings.MaxPredict.ToString();
+        _modelsMax = _settings.ModelsMax.ToString();
+        _autoSelectPort = _settings.AutoSelectPort;
+        _extraArguments = _settings.ExtraArguments;
 
         Models = new ObservableCollection<string>(models);
         _selectedModel = string.IsNullOrWhiteSpace(_settings.ModelPath)
@@ -81,7 +109,7 @@ public sealed class ShellViewModel : ObservableObject
 
     public string StatusText { get => _statusText; private set => SetProperty(ref _statusText, value); }
     private bool CanStart => _state is ServerLifecycleState.Stopped or ServerLifecycleState.Failed or ServerLifecycleState.StopFailed;
-    private bool CanStop => _state is ServerLifecycleState.Running or ServerLifecycleState.UiReady or ServerLifecycleState.WaitingForUi;
+    private bool CanStop => _state is ServerLifecycleState.Running or ServerLifecycleState.WaitingForUi;
     private bool CanToggleServer => CanStart || CanStop;
     public string StartStopLabel => CanStop ? "停止服务" : "启动服务";
     public string ApiBaseUrl => _serviceUri?.ToString().TrimEnd('/') ?? "服务启动后可用";
@@ -121,6 +149,22 @@ public sealed class ShellViewModel : ObservableObject
     }
 
     public string SidebarToggleToolTip => IsSidebarOpen ? "收起侧栏" : "展开侧栏";
+
+    // 推理参数（绑定到侧栏控件，启动时组装为 ServerSettings）
+    public string GpuLayers { get => _gpuLayers; set => SetProperty(ref _gpuLayers, value); }
+    public string ContextSize { get => _contextSize; set => SetProperty(ref _contextSize, value); }
+    public string Threads { get => _threads; set => SetProperty(ref _threads, value); }
+    public string BatchSize { get => _batchSize; set => SetProperty(ref _batchSize, value); }
+    public string Parallel { get => _parallel; set => SetProperty(ref _parallel, value); }
+    public string FlashAttention { get => _flashAttention; set => SetProperty(ref _flashAttention, value); }
+    public string FitMode { get => _fitMode; set => SetProperty(ref _fitMode, value); }
+    public string CacheTypeK { get => _cacheTypeK; set => SetProperty(ref _cacheTypeK, value); }
+    public string CacheTypeV { get => _cacheTypeV; set => SetProperty(ref _cacheTypeV, value); }
+    public string ReasoningMode { get => _reasoningMode; set => SetProperty(ref _reasoningMode, value); }
+    public string MaxPredict { get => _maxPredict; set => SetProperty(ref _maxPredict, value); }
+    public string ModelsMax { get => _modelsMax; set => SetProperty(ref _modelsMax, value); }
+    public bool AutoSelectPort { get => _autoSelectPort; set => SetProperty(ref _autoSelectPort, value); }
+    public string ExtraArguments { get => _extraArguments; set => SetProperty(ref _extraArguments, value); }
 
     private void ToggleSidebar()
     {
@@ -177,19 +221,59 @@ public sealed class ShellViewModel : ObservableObject
         }
     }
 
+    private bool TryBuildSettings(out ServerSettings settings)
+    {
+        settings = _settings;
+        if (!TryPositiveInt(ContextSize, "上下文长度", out var ctx)) return false;
+        if (!TryPositiveInt(Threads, "CPU 线程数", out var thr)) return false;
+        if (!TryPositiveInt(BatchSize, "批大小", out var batch)) return false;
+        if (!TryPositiveInt(Parallel, "并行请求数", out var par)) return false;
+        if (!TryPositiveInt(MaxPredict, "生成上限", out var mp)) return false;
+        if (!TryPositiveInt(ModelsMax, "最大模型数", out var mm)) return false;
+
+        settings = _settings with
+        {
+            ModelPath = SelectedModel,
+            GpuLayers = GpuLayers.Trim(),
+            ContextSize = ctx,
+            Threads = thr,
+            BatchSize = batch,
+            Parallel = par,
+            FlashAttention = FlashAttention.Trim(),
+            FitMode = FitMode.Trim(),
+            CacheTypeK = CacheTypeK.Trim(),
+            CacheTypeV = CacheTypeV.Trim(),
+            ReasoningMode = ReasoningMode.Trim(),
+            MaxPredict = mp,
+            ModelsMax = mm,
+            AutoSelectPort = AutoSelectPort,
+            ExtraArguments = ExtraArguments,
+        };
+        return true;
+    }
+
+    private bool TryPositiveInt(string text, string label, out int value)
+    {
+        if (int.TryParse(text, out value) && value > 0) return true;
+        Log.Append($"{label}必须是大于 0 的整数。");
+        value = 0;
+        return false;
+    }
+
     private void Start()
     {
         _stopRequested = false;
         IsServiceReady = false;
-        _settings = _settings with { ModelPath = SelectedModel };
-        var issues = SettingsValidator.Validate(_settings);
+        if (!TryBuildSettings(out var settings))
+            return;
+        var issues = SettingsValidator.Validate(settings);
         if (issues.Count > 0)
         {
             foreach (var issue in issues) Log.Append(issue.Message);
             return;
         }
 
-        var extra = _settings.ExtraArguments.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var extra = settings.ExtraArguments.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         ExtraArgumentPolicy.Validate(extra, out var errors);
         if (errors.Count > 0)
         {
@@ -197,15 +281,16 @@ public sealed class ShellViewModel : ObservableObject
             return;
         }
 
-        var port = _settings.AutoSelectPort
-            ? WindowsPortAllocator.PickFreePort(_settings.Port)
-            : _settings.Port;
+        var port = settings.AutoSelectPort
+            ? WindowsPortAllocator.PickFreePort(settings.Port)
+            : settings.Port;
         if (port < 0)
         {
-            Log.Append($"端口 {_settings.Port} 已被占用，且没有可用候选端口。");
+            Log.Append($"端口 {settings.Port} 已被占用，且没有可用候选端口。");
             return;
         }
-        var effective = _settings with { Port = port };
+        var effective = settings with { Port = port };
+        _settings = effective;
 
         var config = new LauncherConfig { Settings = effective };
         try
@@ -263,19 +348,26 @@ public sealed class ShellViewModel : ObservableObject
 
     private async Task PollHealthAsync(ServerSettings effective)
     {
-        while (_controller is { IsAlive: true })
+        try
         {
-            ReadLog();
-            if (await _health.ProbeAsync(_serviceUri!.ToString(), "health", CancellationToken.None))
+            while (_controller is { IsAlive: true })
             {
-                _state = ServerLifecycleState.Running;
-                IsServiceReady = true;
-                StatusText = "运行中";
-                UpdateServerButtonState();
-                _webView.NavigateToService(_serviceUri);
-                break;
+                ReadLog();
+                if (await _health.ProbeAsync(_serviceUri!.ToString(), "health", CancellationToken.None))
+                {
+                    _state = ServerLifecycleState.Running;
+                    IsServiceReady = true;
+                    StatusText = "运行中";
+                    UpdateServerButtonState();
+                    _webView.NavigateToService(_serviceUri);
+                    break;
+                }
+                await Task.Delay(TimeSpan.FromSeconds(1));
             }
-            await Task.Delay(TimeSpan.FromSeconds(1));
+        }
+        catch (Exception ex)
+        {
+            Log.Append($"健康检查异常：{ex.Message}");
         }
     }
 
