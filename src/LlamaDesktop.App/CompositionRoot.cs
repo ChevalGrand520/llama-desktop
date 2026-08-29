@@ -32,14 +32,28 @@ public static class CompositionRoot
             ?? ServerSettings.WithDefaults(Math.Max(1, Environment.ProcessorCount), "");
         var uiState = loaded?.Ui ?? new UiState();
 
-        var modelsDir = Path.Combine(appRoot, "models");
-        var models = Directory.Exists(modelsDir)
-            ? Directory.EnumerateFiles(modelsDir, "*.gguf", SearchOption.AllDirectories)
-                .Where(f => !Path.GetFileName(f).StartsWith("Modelfile."))
-                .Where(f => !Path.GetFileName(f).Contains("mmproj", StringComparison.OrdinalIgnoreCase))
-                .OrderBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase)
-                .ToArray()
-            : Array.Empty<string>();
+        // Discover GGUF models from the app's own models\ dir and up to two
+        // parent levels, so a published build under dist\ still sees the
+        // sibling/ancestor models\ folder without duplicating weights.
+        var modelsDirs = new List<string>();
+        var probe = appRoot;
+        for (var i = 0; i < 3; i++)
+        {
+            var candidate = Path.Combine(probe, "models");
+            if (!modelsDirs.Contains(candidate, StringComparer.OrdinalIgnoreCase))
+                modelsDirs.Add(candidate);
+            var parent = Path.GetDirectoryName(probe.TrimEnd(Path.DirectorySeparatorChar));
+            if (parent is null) break;
+            probe = parent;
+        }
+        var models = modelsDirs
+            .Where(Directory.Exists)
+            .SelectMany(d => Directory.EnumerateFiles(d, "*.gguf", SearchOption.AllDirectories))
+            .Where(f => !Path.GetFileName(f).StartsWith("Modelfile."))
+            .Where(f => !Path.GetFileName(f).Contains("mmproj", StringComparison.OrdinalIgnoreCase))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase)
+            .ToArray();
         var firstModel = models.FirstOrDefault() ?? "";
         var effective = string.IsNullOrWhiteSpace(saved.ModelPath)
             ? saved with { ModelPath = firstModel, ModelsDirectory = "models" }

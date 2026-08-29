@@ -226,7 +226,19 @@ public sealed class ShellViewModel : ObservableObject
 
         try
         {
-            File.WriteAllText(_logPath, "");
+            _logReader?.Dispose();
+            _logReader = null;
+            try
+            {
+                File.WriteAllText(_logPath, "");
+            }
+            catch (IOException)
+            {
+                // A leftover server process (e.g. the user earlier chose
+                // "keep running in background") may still hold the log file.
+                // Do not block startup; continue and share the existing file.
+                Log.Append("日志文件被其他进程占用，无法清空，将继续启动。");
+            }
             _logReader = new IncrementalUtf8LogReader(_logPath);
             _controller = new LlamaServerController();
             _controller.ProcessExited += code =>
