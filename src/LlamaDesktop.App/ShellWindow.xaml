@@ -102,34 +102,47 @@
               Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
               BorderThickness="1" CornerRadius="8" Padding="16">
         <Border.Effect><DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.06" Color="#26312D"/></Border.Effect>
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-          <Grid>
-            <Grid.RowDefinitions>
-              <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-              <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-              <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <TextBlock Text="服务器" Style="{StaticResource SectionHeadingStyle}" Margin="0,0,0,14"/>
-            <StackPanel Grid.Row="1">
-              <TextBlock Text="GGUF 模型" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,7"/>
-              <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                <ComboBox x:Name="ModelPicker" ItemsSource="{Binding Models}" SelectedItem="{Binding SelectedModel, Mode=TwoWay}"
-                          VerticalContentAlignment="Center" ToolTip="选择要加载的 GGUF 模型">
-                  <ComboBox.ItemTemplate>
-                    <DataTemplate><TextBlock Text="{Binding Converter={StaticResource FileNameConverter}}" TextTrimming="CharacterEllipsis" ToolTip="{Binding}"/></DataTemplate>
-                  </ComboBox.ItemTemplate>
-                </ComboBox>
-                <Button Grid.Column="1" Style="{StaticResource IconButtonStyle}" Command="{Binding BrowseModelCommand}"
-                        Width="38" Height="38" Margin="8,0,0,0" ToolTip="浏览模型文件" AutomationProperties.Name="浏览模型文件">
-                  <Path Width="16" Height="16" Stretch="Uniform" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.6"
-                        StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                        Data="M3,5 A2,2 0 0 1 5,3 H9 L11,5 H19 A2,2 0 0 1 21,7 V18 A2,2 0 0 1 19,20 H5 A2,2 0 0 1 3,18 Z"/>
-                </Button>
-              </Grid>
-            </StackPanel>
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+          </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="2" Margin="0,14,0,0">
+          <TextBlock Text="服务器" Style="{StaticResource SectionHeadingStyle}" Margin="0,0,0,14"/>
+
+          <StackPanel Grid.Row="1">
+            <TextBlock Text="GGUF 模型" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,7"/>
+            <Grid>
+              <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+              <ComboBox x:Name="ModelPicker" ItemsSource="{Binding Models}" SelectedItem="{Binding SelectedModel, Mode=TwoWay}"
+                        VerticalContentAlignment="Center" ToolTip="选择要加载的 GGUF 模型">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate><TextBlock Text="{Binding Converter={StaticResource FileNameConverter}}" TextTrimming="CharacterEllipsis" ToolTip="{Binding}"/></DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <Button Grid.Column="1" Style="{StaticResource IconButtonStyle}" Command="{Binding BrowseModelCommand}"
+                      Width="38" Height="38" Margin="8,0,0,0" ToolTip="浏览模型文件" AutomationProperties.Name="浏览模型文件">
+                <Path Width="16" Height="16" Stretch="Uniform" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.6"
+                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                      Data="M3,5 A2,2 0 0 1 5,3 H9 L11,5 H19 A2,2 0 0 1 21,7 V18 A2,2 0 0 1 19,20 H5 A2,2 0 0 1 3,18 Z"/>
+              </Button>
+            </Grid>
+          </StackPanel>
+
+          <Button Grid.Row="2" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding ToggleServerCommand}"
+                  Margin="0,14,0,0">
+            <StackPanel Orientation="Horizontal">
+              <Path Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
+                    Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.8"
+                    StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                    Data="M12,2 V12 M5.64,5.64 A9,9 0 1 0 18.36,5.64"/>
+              <TextBlock Text="{Binding StartStopLabel}" VerticalAlignment="Center"
+                         Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
+            </StackPanel>
+          </Button>
+
+          <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+            <StackPanel>
               <TextBlock Text="推理参数" Style="{StaticResource SectionHeadingStyle}" Margin="0,0,0,8"/>
               <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
@@ -151,99 +164,88 @@
                   <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding BatchSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
               </Grid>
+
+              <Expander Header="高级参数" Margin="0,10,0,0">
+                <StackPanel Margin="0,4,0,0">
+                  <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                      <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Column="0" Grid.Row="0">
+                      <TextBlock Text="Flash Attention" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
+                      <ComboBox SelectedValue="{Binding FlashAttention}" SelectedValuePath="Content">
+                        <ComboBoxItem Content="on"/><ComboBoxItem Content="off"/><ComboBoxItem Content="auto"/>
+                      </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Grid.Row="0">
+                      <TextBlock Text="Thinking" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
+                      <ComboBox SelectedValue="{Binding ReasoningMode}" SelectedValuePath="Content">
+                        <ComboBoxItem Content="off"/><ComboBoxItem Content="on"/><ComboBoxItem Content="auto"/>
+                      </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="0" Grid.Row="1" Margin="0,8,0,0">
+                      <TextBlock Text="Fit 模式" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
+                      <ComboBox SelectedValue="{Binding FitMode}" SelectedValuePath="Content">
+                        <ComboBoxItem Content="on"/><ComboBoxItem Content="off"/>
+                      </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Grid.Row="1" Margin="0,8,0,0">
+                      <TextBlock Text="并行请求" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
+                      <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Parallel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="0" Grid.Row="2" Margin="0,8,0,0">
+                      <TextBlock Text="KV 缓存 K" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
+                      <ComboBox SelectedValue="{Binding CacheTypeK}" SelectedValuePath="Content">
+                        <ComboBoxItem Content="f16"/><ComboBoxItem Content="q8_0"/>
+                      </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Grid.Row="2" Margin="0,8,0,0">
+                      <TextBlock Text="KV 缓存 V" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
+                      <ComboBox SelectedValue="{Binding CacheTypeV}" SelectedValuePath="Content">
+                        <ComboBoxItem Content="f16"/><ComboBoxItem Content="q8_0"/>
+                      </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="0" Grid.Row="3" Margin="0,8,0,0">
+                      <TextBlock Text="生成上限" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
+                      <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding MaxPredict, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                    </StackPanel>
+                    <CheckBox Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="3" Margin="1,10,0,0"
+                              IsChecked="{Binding AutoSelectPort, Mode=TwoWay}" Content="端口被占用时自动顺延"/>
+                    <StackPanel Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="3" Margin="0,8,0,0">
+                      <TextBlock Text="额外参数" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
+                      <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding ExtraArguments, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                               AcceptsReturn="True" TextWrapping="Wrap" MinHeight="46"/>
+                    </StackPanel>
+                  </Grid>
+                </StackPanel>
+              </Expander>
             </StackPanel>
+          </ScrollViewer>
 
-            <Expander Grid.Row="3" Header="高级参数" Margin="0,10,0,0">
-              <StackPanel Margin="0,4,0,0">
-                <Grid>
-                  <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="10"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                  <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
-                  </Grid.RowDefinitions>
-                  <StackPanel Grid.Column="0" Grid.Row="0">
-                    <TextBlock Text="Flash Attention" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
-                    <ComboBox SelectedValue="{Binding FlashAttention}" SelectedValuePath="Content">
-                      <ComboBoxItem Content="on"/><ComboBoxItem Content="off"/><ComboBoxItem Content="auto"/>
-                    </ComboBox>
-                  </StackPanel>
-                  <StackPanel Grid.Column="2" Grid.Row="0">
-                    <TextBlock Text="Thinking" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
-                    <ComboBox SelectedValue="{Binding ReasoningMode}" SelectedValuePath="Content">
-                      <ComboBoxItem Content="off"/><ComboBoxItem Content="on"/><ComboBoxItem Content="auto"/>
-                    </ComboBox>
-                  </StackPanel>
-                  <StackPanel Grid.Column="0" Grid.Row="1" Margin="0,8,0,0">
-                    <TextBlock Text="Fit 模式" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
-                    <ComboBox SelectedValue="{Binding FitMode}" SelectedValuePath="Content">
-                      <ComboBoxItem Content="on"/><ComboBoxItem Content="off"/>
-                    </ComboBox>
-                  </StackPanel>
-                  <StackPanel Grid.Column="2" Grid.Row="1" Margin="0,8,0,0">
-                    <TextBlock Text="并行请求" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
-                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding Parallel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                  </StackPanel>
-                  <StackPanel Grid.Column="0" Grid.Row="2" Margin="0,8,0,0">
-                    <TextBlock Text="KV 缓存 K" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
-                    <ComboBox SelectedValue="{Binding CacheTypeK}" SelectedValuePath="Content">
-                      <ComboBoxItem Content="f16"/><ComboBoxItem Content="q8_0"/>
-                    </ComboBox>
-                  </StackPanel>
-                  <StackPanel Grid.Column="2" Grid.Row="2" Margin="0,8,0,0">
-                    <TextBlock Text="KV 缓存 V" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
-                    <ComboBox SelectedValue="{Binding CacheTypeV}" SelectedValuePath="Content">
-                      <ComboBoxItem Content="f16"/><ComboBoxItem Content="q8_0"/>
-                    </ComboBox>
-                  </StackPanel>
-                  <StackPanel Grid.Column="0" Grid.Row="3" Margin="0,8,0,0">
-                    <TextBlock Text="生成上限" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
-                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding MaxPredict, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                  </StackPanel>
-                  <CheckBox Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="3" Margin="1,10,0,0"
-                            IsChecked="{Binding AutoSelectPort, Mode=TwoWay}" Content="端口被占用时自动顺延"/>
-                  <StackPanel Grid.Column="0" Grid.Row="5" Grid.ColumnSpan="3" Margin="0,8,0,0">
-                    <TextBlock Text="额外参数" Style="{StaticResource FieldLabelStyle}" Margin="1,0,0,5"/>
-                    <TextBox Style="{StaticResource InputTextBoxStyle}" Text="{Binding ExtraArguments, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                             AcceptsReturn="True" TextWrapping="Wrap" MinHeight="46"/>
-                  </StackPanel>
-                </Grid>
-              </StackPanel>
-            </Expander>
-
-            <Button Grid.Row="4" Style="{StaticResource PrimaryButtonStyle}" Command="{Binding ToggleServerCommand}"
-                    Margin="0,14,0,0">
-              <StackPanel Orientation="Horizontal">
-                <Path Width="15" Height="15" Margin="0,0,8,0" Stretch="Uniform"
-                      Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.8"
-                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                      Data="M12,2 V12 M5.64,5.64 A9,9 0 1 0 18.36,5.64"/>
-                <TextBlock Text="{Binding StartStopLabel}" VerticalAlignment="Center"
-                           Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"/>
-              </StackPanel>
+          <Grid Grid.Row="4" Margin="0,12,0,0">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel>
+              <TextBlock Text="API 地址" Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,5"/>
+              <TextBlock Text="{Binding ApiBaseUrl}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                         Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{StaticResource CodeFont}" FontSize="11.5"/>
+            </StackPanel>
+            <Button Grid.Column="1" Style="{StaticResource IconButtonStyle}" Command="{Binding CopyApiCommand}"
+                    Width="32" Height="32" Margin="8,2,0,0" ToolTip="复制 API 地址" AutomationProperties.Name="复制 API 地址">
+              <Path Width="14" Height="14" Stretch="Uniform" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.6"
+                    StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                    Data="M8,8 H18 V18 H8 Z M6,16 H4 A2,2 0 0 1 2,14 V4 A2,2 0 0 1 4,2 H14 A2,2 0 0 1 16,4 V6"/>
             </Button>
-            <Border Grid.Row="5" Height="1" Background="{DynamicResource BorderBrush}" Margin="0,16,0,14"/>
-            <Grid Grid.Row="6" Margin="1,0,1,4">
-              <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-              <StackPanel>
-                <TextBlock Text="API 地址" Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,5"/>
-                <TextBlock Text="{Binding ApiBaseUrl}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
-                           Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{StaticResource CodeFont}" FontSize="11.5"/>
-              </StackPanel>
-              <Button Grid.Column="1" Style="{StaticResource IconButtonStyle}" Command="{Binding CopyApiCommand}"
-                      Width="32" Height="32" Margin="8,2,0,0" ToolTip="复制 API 地址" AutomationProperties.Name="复制 API 地址">
-                <Path Width="14" Height="14" Stretch="Uniform" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.6"
-                      StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                      Data="M8,8 H18 V18 H8 Z M6,16 H4 A2,2 0 0 1 2,14 V4 A2,2 0 0 1 4,2 H14 A2,2 0 0 1 16,4 V6"/>
-              </Button>
-            </Grid>
-            <Expander Grid.Row="7" Header="实时日志" IsExpanded="{Binding IsLogDrawerOpen, Mode=TwoWay}" Margin="0,12,0,0">
-              <Border MinHeight="150" Background="{DynamicResource LogSurfaceBrush}" CornerRadius="6" ClipToBounds="True">
-                <TextBox x:Name="LogText" Style="{StaticResource LogTextBoxStyle}" IsReadOnly="True" AcceptsReturn="True"
-                         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap"/>
-              </Border>
-            </Expander>
           </Grid>
-        </ScrollViewer>
+
+          <Expander Grid.Row="5" Header="实时日志" IsExpanded="{Binding IsLogDrawerOpen, Mode=TwoWay}" Margin="0,12,0,0">
+            <Border Height="150" Background="{DynamicResource LogSurfaceBrush}" CornerRadius="6" ClipToBounds="True">
+              <TextBox x:Name="LogText" Style="{StaticResource LogTextBoxStyle}" IsReadOnly="True" AcceptsReturn="True"
+                       VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" TextWrapping="NoWrap"/>
+            </Border>
+          </Expander>
+        </Grid>
       </Border>
     </Grid>
   </Grid>
