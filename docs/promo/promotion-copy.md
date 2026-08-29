@@ -26,6 +26,7 @@
 - **开包即用**：self-contained .NET 8 单文件夹，无需 Python / Node / .NET SDK，解压双击即用
 - **内嵌聊天**：WebView2 直接内嵌 llama-server 官方聊天页，不用切浏览器
 - **推理参数面板**：GPU 层数、上下文、线程、Flash Attention、Fit 自动显存适配、KV 量化、Thinking 开关，所见即所得
+- **多模态支持**：自动识别同目录的 mmproj 视觉投影器，选中主模型即自动配对、启动时自动加载
 - **自动调参**：检测 GPU/显存，`--fit` 自动分层，显存不够时降级 CPU
 - **安全生命周期**：PID 身份校验 + 三阶段停止（优雅→进程树→强制），绝不误杀其他 llama 实例
 - **中文界面** + 实时日志尾读
@@ -65,6 +66,7 @@ LM Studio is closed-source and bundles its own engine; Ollama/Jan use their own 
 - **Zero dependency**: self-contained .NET 8 single-folder build — unzip and run
 - **Embedded chat**: WebView2 hosts the official llama-server Web UI in-app, no browser tab
 - **Inference panel**: GPU layers, context, threads, Flash Attention, `--fit` auto-offload, KV cache quantization, reasoning mode — WYSIWYG
+- **Multimodal**: auto-detects same-directory `mmproj` projector, pairs and loads it when you pick the base model
 - **Safe lifecycle**: PID identity check + three-phase stop (graceful → process tree → forced), never kills by process name
 - **Chinese + English UI**, live log tailing, 27 automated tests
 
