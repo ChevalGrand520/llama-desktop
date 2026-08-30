@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/icons/png/icon-128.png" width="96" alt="Llama Desktop logo"/>
+</p>
+
 # Llama Desktop
 
 **轻量便携 · 开包即用 · 零依赖的 llama.cpp 桌面管理壳**
