@@ -38,8 +38,8 @@ C# 12 / .NET 8 WPF / WebView2，零第三方运行时依赖。
 
 #### 链接
 
-- GitHub：https://github.com/zc4578980-tech/llama-desktop
-- Release（含 CUDA 版 llama-server）：https://github.com/zc4578980-tech/llama-desktop/releases
+- GitHub：https://github.com/ChevalGrand520/llama-desktop
+- Release（含 CUDA 版 llama-server）：https://github.com/ChevalGrand520/llama-desktop/releases
 
 （此处插入截图）
 
@@ -76,8 +76,8 @@ C# 12 / .NET 8 WPF / WebView2. No third-party runtime.
 
 #### Links
 
-- GitHub: https://github.com/zc4578980-tech/llama-desktop
-- Release (bundles CUDA llama-server): https://github.com/zc4578980-tech/llama-desktop/releases
+- GitHub: https://github.com/ChevalGrand520/llama-desktop
+- Release (bundles CUDA llama-server): https://github.com/ChevalGrand520/llama-desktop/releases
 
 （此处插入截图）
 
