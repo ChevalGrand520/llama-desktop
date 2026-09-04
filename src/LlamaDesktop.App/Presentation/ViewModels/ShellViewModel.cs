@@ -6,6 +6,7 @@ using LlamaDesktop.App.Web;
 using LlamaDesktop.App.Presentation;
 using LlamaDesktop.Core.Arguments;
 using LlamaDesktop.Core.Models;
+using LlamaDesktop.Core.Services;
 using LlamaDesktop.Core.Validation;
 using LlamaDesktop.Infrastructure.Logging;
 using LlamaDesktop.Infrastructure.Network;
@@ -242,6 +243,24 @@ public sealed class ShellViewModel : ObservableObject
     private bool TryBuildSettings(out ServerSettings settings)
     {
         settings = _settings;
+        // Guard: a projector (mmproj) must never be loaded as the base model.
+        // If the user picked one via the browse dialog, correct it to the paired
+        // base model in the same directory.
+        var selected = SelectedModel;
+        if (MmprojPairing.IsMmproj(selected))
+        {
+            var dir = Path.GetDirectoryName(selected) ?? "";
+            var baseModel = Models.FirstOrDefault(m =>
+                string.Equals(Path.GetDirectoryName(m), dir, StringComparison.OrdinalIgnoreCase)
+                && !MmprojPairing.IsMmproj(m));
+            if (baseModel is not null)
+            {
+                Log.Append("所选文件是 mmproj 投影器，已自动改用同目录模型。");
+                selected = baseModel;
+                SelectedModel = baseModel; // triggers UpdateMmproj -> CurrentMmproj
+            }
+        }
+
         if (!TryPositiveInt(ContextSize, "上下文长度", out var ctx)) return false;
         if (!TryPositiveInt(Threads, "CPU 线程数", out var thr)) return false;
         if (!TryPositiveInt(BatchSize, "批大小", out var batch)) return false;
