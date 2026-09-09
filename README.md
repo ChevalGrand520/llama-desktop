@@ -35,6 +35,17 @@ A lightweight, portable, zero-dependency desktop shell for [llama.cpp](https://g
 
 > 模型文件请自行放入 `models\` 目录；应用不内置模型下载。
 
+## Scoop 安装 / Scoop Install
+
+Windows 用户也可通过 [Scoop](https://scoop.sh) 一键安装（清单已通过 ScoopInstaller/Extras `/verify` 校验；因收录准则暂在自有 bucket 维护）：
+
+```powershell
+scoop bucket add llama-desktop https://github.com/ChevalGrand520/scoop-llama-desktop
+scoop install llama-desktop
+```
+
+Winget 通道 `ChevalGrand520.LlamaDesktop`（microsoft/winget-pkgs）收录审核中。
+
 ## 系统要求 / Requirements
 
 - Windows 10/11 x64

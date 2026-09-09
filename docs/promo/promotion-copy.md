@@ -1,7 +1,7 @@
 # Llama Desktop 宣传文案（v1.1.0）
 
 > 发帖时请把 `（此处插入截图）` 替换为上传后的截图。
-> 截图文件：`docs/screenshots/llama-desktop-v1.1.png`
+> 截图文件：`docs/screenshots/llama-desktop-manual.png`（仓库内现有 91 KB 手动截图；正式发帖前建议换 v1.1.0 新截图，见 `2026-09-02-value-and-outreach-plan.md` Phase 0）
 
 ---
 
@@ -30,7 +30,7 @@
 - **自动调参**：检测 GPU/显存，`--fit` 自动分层，显存不够时降级 CPU
 - **安全生命周期**：PID 身份校验 + 三阶段停止（优雅→进程树→强制），绝不误杀其他 llama 实例
 - **中文界面** + 实时日志尾读
-- 27 项自动化测试 + 独立代码审查
+- 40+ 项自动化测试用例 + 独立代码审查
 
 #### 技术栈
 
@@ -68,7 +68,7 @@ LM Studio is closed-source and bundles its own engine; Ollama/Jan use their own 
 - **Inference panel**: GPU layers, context, threads, Flash Attention, `--fit` auto-offload, KV cache quantization, reasoning mode — WYSIWYG
 - **Multimodal**: auto-detects same-directory `mmproj` projector, pairs and loads it when you pick the base model
 - **Safe lifecycle**: PID identity check + three-phase stop (graceful → process tree → forced), never kills by process name
-- **Chinese + English UI**, live log tailing, 27 automated tests
+- **Chinese + English UI**, live log tailing, 40+ automated tests
 
 #### Stack
 
