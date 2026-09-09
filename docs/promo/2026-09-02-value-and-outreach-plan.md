@@ -133,6 +133,12 @@
 1. **等成熟后重开**：Scoop 走 Package Request issue 流程 + 项目需一定采用度（star/下载）。建议配合 Phase 2 社区发布后（≥1-2 周、下载 ≥100）再走一次 Package Request → 重开 PR。
 2. **自建官方 bucket**（维护者明示允许、不依赖审核）：在 `ChevalGrand520` 下建 `scoop-llama-desktop` bucket 仓库，manifest 沿用已通过 `/verify` 的 `llama-desktop.json`（含 checkver/autoupdate）；用户侧 `scoop bucket add llama-desktop https://github.com/ChevalGrand520/scoop-llama-desktop && scoop install llama-desktop`。需用户确认创建新公开仓库。
 
+### ✅ 已执行（用户确认后）：自建 Scoop bucket 落地
+- 新公开仓库：https://github.com/ChevalGrand520/scoop-llama-desktop （main，commit `3ad1db0`，topics 含 scoop/llama-cpp/windows）
+- 内容：`bucket/llama-desktop.json`（沿用 Extras `/verify` 全绿定稿）+ 中英 README（bucket add/install/update/WebView2/模型自备说明）+ MIT LICENSE
+- llama-desktop 主 README 已加「Scoop 安装」小节并注明 winget 审核中 → 提交 `85c29ff`（docs: add Scoop install channel, promo copy fixes and outreach plan），已推送 master
+- 待办（≥2026-09-28）：hades217/awesome-ai PR（30 天门槛）；成熟后 Scoop Package Request → 重开 Extras PR；跟踪 winget bot 合入 #428122 与 awesome-ml #77 审阅
+
 > 📌 账号说明：`zc4578980-tech` 已改名为 `ChevalGrand520`（`users/zc4578980-tech` → 404），gh 凭据缓存旧名。所有 fork/PR head 均以 `ChevalGrand520:` 为准——即 llama-desktop 上游作者账号本身。
 
 ### 核验结论（暂不提交的候选）
